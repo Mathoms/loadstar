@@ -1,6 +1,6 @@
 name: CI
 on:
-  # push triggers removed to conserve private-repo CI minutes.
+  push: { branches: [main] }
   pull_request:
 
 jobs:
