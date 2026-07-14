@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Loadstar — performance testing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-name">Loadstar</span>
+    <span class="brand-sub">performance lab</span>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-view="new" role="tab">New test</button>
+    <button class="tab" data-view="tests" role="tab">Tests</button>
+    <button class="tab" data-view="runs" role="tab">Runs</button>
+    <button class="tab" data-view="schedules" role="tab">Schedules</button>
+  </nav>
+</header>
+
+<!-- Signature: live oscilloscope strip -->
+<div class="scope-strip" aria-hidden="true">
+  <canvas id="scope" height="56"></canvas>
+  <span class="scope-label" id="scope-label">idle — waiting for signal</span>
+</div>
+
+<main>
+
+  <!-- ============ NEW TEST ============ -->
+  <section id="view-new" class="view">
+    <h1>Configure a test</h1>
+    <p class="lede">Describe the intent. Loadstar writes the JMeter plan.</p>
+
+    <form id="test-form" class="no-type" autocomplete="off">
+      <div class="type-toggle" id="type-toggle">
+        <button type="button" class="ttype" data-type="http">
+          <span class="ttype-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M13.4 12.6 16 10"/><path d="M12 4a8 8 0 0 1 8 8"/><path d="M4 12a8 8 0 0 1 8-8"/><path d="M4 12a8 8 0 0 0 1.5 4.7"/><path d="M18.5 16.7A8 8 0 0 0 20 12"/></svg></span>
+          <span class="ttype-body"><b>Non-functional</b><i>load · stress · speed &amp; scale</i></span>
+          <span class="ttype-chips"><span class="chip">JMeter</span><span class="chip">k6</span></span>
+        </button>
+        <button type="button" class="ttype" data-type="browser">
+          <span class="ttype-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg></span>
+          <span class="ttype-body"><b>Functional</b><i>clicks like a real user</i></span>
+          <span class="ttype-chips"><span class="chip">Playwright</span></span>
+        </button>
+        <button type="button" class="ttype" data-type="script">
+          <span class="ttype-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/></svg></span>
+          <span class="ttype-body"><b>Upload script</b><i>bring your own script</i></span>
+          <span class="ttype-chips"><span class="chip">.jmx</span><span class="chip">.js</span></span>
+        </button>
+      </div>
+      <div class="ai-strip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3"/></svg>
+        <span>Every run is analyzed by Claude — verdict, trends, and findings on each report.</span>
+      </div>
+
+      <div id="script-panel" class="script-only" hidden>
+        <label class="field span2">
+          <span>Test name</span>
+          <input name="script_name" placeholder="Checkout scenario — from JMeter" />
+        </label>
+        <label class="field span2">
+          <span>Script file <span class="hint">(.jmx for JMeter, .js for k6)</span></span>
+          <input type="file" id="script-file" accept=".jmx,.js" />
+        </label>
+        <div class="field span2" id="script-info" hidden>
+          <div class="hint" id="script-detected"></div>
+          <div id="script-warnings" class="hint err" style="margin-top:6px"></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn primary" id="script-run" disabled>Upload &amp; run script</button>
+          <span id="script-status" class="status"></span>
+        </div>
+      </div>
+
+      <div class="grid">
+        <label class="field span2 not-script">
+          <span>Test name</span>
+          <input name="name" required maxlength="120" placeholder="Checkout API — baseline" />
+        </label>
+
+        <label class="field span2 not-script">
+          <span id="target-label">Target URL</span>
+          <input name="target_url" type="url" required placeholder="https://staging.example.com/api/checkout" />
+        </label>
+
+        <label class="field span2 not-script">
+          <span>Email report to (optional)</span>
+          <input name="notify_email" type="email" placeholder="you@yourcompany.com" />
+          <p class="hint">After each run you'll get an email with the results, Claude's verdict,
+            and a comparison against past runs — what improved, what got worse. Requires SMTP
+            settings in <code>.env</code> (see the README).</p>
+        </label>
+
+        <div class="field http-only">
+          <span>Engine</span>
+          <div class="mode-picker">
+            <button type="button" class="mode eng active" data-engine="jmeter"><b>JMeter</b><i>battle-tested</i></button>
+            <button type="button" class="mode eng" data-engine="k6"><b>k6</b><i>modern &amp; light</i></button>
+          </div>
+        </div>
+
+        <label class="field http-only">
+          <span>Method</span>
+          <select name="method">
+            <option>GET</option><option>POST</option><option>PUT</option>
+            <option>PATCH</option><option>DELETE</option><option>HEAD</option>
+          </select>
+        </label>
+
+        <div class="field http-only">
+          <span>Test mode</span>
+          <div class="mode-picker" id="mode-picker">
+            <button type="button" class="mode active" data-mode="load"><b>Load</b><i>ramp &amp; hold</i></button>
+            <button type="button" class="mode" data-mode="stress"><b>Stress</b><i>find the ceiling</i></button>
+            <button type="button" class="mode" data-mode="spike"><b>Spike</b><i>sudden burst</i></button>
+            <button type="button" class="mode" data-mode="soak"><b>Soak</b><i>long endurance</i></button>
+          </div>
+          <small style="font-size:11px;color:var(--ink-2);font-weight:400;text-transform:none;letter-spacing:0;line-height:1.45;display:block;margin-top:-2px"><b>Load</b> — hold a steady level: &ldquo;can we handle Black Friday?&rdquo; &middot; <b>Stress</b> — keep climbing until it breaks: &ldquo;where is the ceiling?&rdquo; &middot; <b>Spike</b> — sudden burst: &ldquo;what if we hit the front page?&rdquo; &middot; <b>Soak</b> — long and steady: &ldquo;do we leak memory over hours?&rdquo;</small>
+        </div>
+
+        <label class="field http-only">
+          <span>Virtual users</span>
+          <input name="virtual_users" type="number" min="1" max="500" value="25" />
+          <small style="font-size:11px;color:var(--ink-2);font-weight:400;text-transform:none;letter-spacing:0;line-height:1.45;display:block;margin-top:-2px">Simulated concurrent users &mdash; <b>not</b> requests per second. Each user sends requests as fast as it can, unless you set think time.</small>
+        </label>
+        <label class="field http-only">
+          <span>Ramp-up (s)</span>
+          <input name="ramp_up_secs" type="number" min="1" max="3600" value="15" />
+          <small style="font-size:11px;color:var(--ink-2);font-weight:400;text-transform:none;letter-spacing:0;line-height:1.45;display:block;margin-top:-2px">Add users gradually over this many seconds instead of all at once &mdash; sudden load can trip rate limiters and skew results.</small>
+        </label>
+        <label class="field http-only">
+          <span>Duration (s)</span>
+          <input name="duration_secs" type="number" min="10" max="3600" value="60" />
+          <small style="font-size:11px;color:var(--ink-2);font-weight:400;text-transform:none;letter-spacing:0;line-height:1.45;display:block;margin-top:-2px">How long to hold the load after ramp-up finishes.</small>
+        </label>
+        <label class="field http-only">
+          <span>Distribution</span>
+          <select name="distribution_mode" id="dist-mode">
+            <option value="auto">Auto (distribute above 100 VUs)</option>
+            <option value="on">On — force distribute</option>
+            <option value="off">Off — single generator</option>
+          </select>
+          <small style="font-size:11px;color:var(--ink-2);font-weight:400;text-transform:none;letter-spacing:0;line-height:1.45;display:block;margin-top:-2px">Split the load across multiple worker containers for high user counts. Needs <code>docker compose up --scale worker=N</code>. See the Usage guide.</small>
+        </label>
+        <label class="field http-only" id="dist-shards-field" hidden>
+          <span>Generators</span>
+          <input name="shard_count_override" type="number" min="2" max="10" placeholder="auto" />
+          <small style="color:var(--ink-2)">Needs multiple workers: docker compose up --scale worker=N</small>
+        </label>
+
+        <label class="field span2 http-only">
+          <span>Headers (JSON, optional)</span>
+          <input name="headers" placeholder='{"Authorization": "Bearer …"}' />
+        </label>
+
+        <label class="field span2" id="body-field" hidden>
+          <span>Request body</span>
+          <textarea name="body" rows="4" placeholder='{"sku": "A-100", "qty": 1}'></textarea>
+        </label>
+
+        <div class="field span2 http-only">
+          <label class="hint" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="multi-toggle" style="width:auto" />
+            <span><b>Multiple requests:</b> run a sequence of API calls (GET, POST, PUT, DELETE…) in one test,
+            e.g. login → get cart → add item → checkout. Target URL becomes the base URL; each request adds its path.</span>
+          </label>
+          <div id="requests-builder" hidden style="margin-top:10px">
+            <label class="hint" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:8px">
+              <input type="checkbox" id="cookie-mgr" checked style="width:auto" />
+              <span><b>Keep session cookies</b> — after a login request, automatically reuse its session cookie on later requests (recommended for authenticated flows).</span>
+            </label>
+            <div id="requests-rows"></div>
+            <button type="button" class="btn" id="add-request">+ Add request</button>
+          </div>
+        </div>
+
+        <div class="field span2 http-only">
+          <span>Test data — CSV file (optional)</span>
+          <input type="file" id="csv-file" accept=".csv,text/csv" />
+          <p class="hint">Upload a CSV where the first row names your columns, e.g.
+            <code>username,password</code>. Then use <code>${username}</code> anywhere in the
+            URL, headers, or body — each virtual user picks the next row automatically.</p>
+          <p class="hint" id="csv-status" hidden></p>
+        </div>
+
+        <div class="field span2 not-script">
+          <span>Pass/fail thresholds — for CI/CD (optional)</span>
+          <p class="hint">If any threshold is exceeded, the run is marked <b>SLA failed</b> —
+            your CI pipeline can read that flag and block the deploy (see <code>ci/</code> in the project).</p>
+          <div class="grid" style="margin-top:8px">
+            <label class="field http-only"><span>Max p95 (ms)</span>
+              <input name="sla_max_p95" type="number" min="1" placeholder="e.g. 500" /></label>
+            <label class="field http-only"><span>Max error rate (%)</span>
+              <input name="sla_max_err" type="number" min="0" step="0.1" placeholder="e.g. 1" /></label>
+            <label class="field browser-only" hidden><span>Min pass rate (%)</span>
+              <input name="sla_min_pass" type="number" min="0" max="100" placeholder="e.g. 100" /></label>
+            <label class="field browser-only" hidden><span>Max avg flow (ms)</span>
+              <input name="sla_max_flow" type="number" min="1" placeholder="e.g. 5000" /></label>
+          </div>
+        </div>
+
+        <!-- ————— Browser test fields ————— -->
+        <label class="field browser-only" hidden>
+          <span>Browser engine</span>
+          <select name="browser">
+            <option value="chromium">Chromium (Chrome / Edge)</option>
+            <option value="firefox">Firefox</option>
+            <option value="webkit">WebKit (Safari)</option>
+          </select>
+        </label>
+        <label class="field browser-only" hidden>
+          <span>Parallel users</span>
+          <input name="browser_users" type="number" min="1" max="5" value="1" />
+        </label>
+        <label class="field browser-only" hidden>
+          <span>Repeats per user</span>
+          <input name="loops" type="number" min="1" max="10" value="1" />
+        </label>
+
+        <div class="field span2 browser-only" hidden>
+          <span>Steps — what should the user do?</span>
+          <p class="hint">The test always starts by opening your Target URL. Then each step runs
+            in order. A <b>selector</b> points at something on the page — the easiest kind is
+            <code>text=Sign in</code> (finds whatever says "Sign in"). See the
+            <b>Browser testing guide</b> in the project folder for a friendly walkthrough.</p>
+          <p class="hint"><b>Check steps verify the page is actually right</b> — not just that your clicks worked.
+            Without them a flow can click straight through a completely broken page and still pass.
+            Add <code>Check: text is NOT there</code> with <code>Error</code> after a checkout step to catch exactly that.</p>
+          <div id="steps"></div>
+          <div class="form-actions" style="margin-top:10px">
+            <button type="button" class="btn" id="add-step">+ Add step</button>
+            <label class="btn" style="cursor:pointer" for="side-file">Import Selenium .side file</label>
+            <input type="file" id="side-file" accept=".side,application/json" hidden />
+          </div>
+          <p class="hint" id="side-status" hidden></p>
+        </div>
+
+        <div class="field span2 browser-only" hidden>
+          <label class="hint" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="bg-load" style="width:auto" />
+            <span><b>Browser under load:</b> hammer the same target with a background load test
+            while this flow runs, to measure real user experience under pressure.</span>
+          </label>
+          <div class="grid" id="bg-fields" hidden style="margin-top:10px">
+            <label class="field"><span>Background users</span>
+              <input name="bg_users" type="number" min="1" max="500" value="50" /></label>
+            <label class="field"><span>Background duration (s)</span>
+              <input name="bg_duration" type="number" min="10" max="3600" value="120" /></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions not-script">
+        <button type="submit" class="btn primary">Save &amp; run test</button>
+        <span id="form-status" class="status" role="status"></span>
+      </div>
+    </form>
+  </section>
+
+
+  <!-- ============ TESTS ============ -->
+  <section id="view-tests" class="view" hidden>
+    <h1>Tests</h1>
+    <p class="lede">Every test you've saved. Run again, download the script, or delete.</p>
+    <div class="filter-bar" id="tests-filter">
+      <button class="filter active" data-filter="all">All</button>
+      <button class="filter" data-filter="http">Non-functional</button>
+      <button class="filter" data-filter="browser">Functional</button>
+    </div>
+    <div id="tests-list" class="runs-list"></div>
+  </section>
+
+  <!-- ============ RUNS ============ -->
+  <section id="view-runs" class="view" hidden>
+    <h1>Runs</h1>
+    <p class="lede">Every execution, newest first. Open one to read its report.</p>
+    <div class="filter-bar" id="runs-filter">
+      <button class="filter active" data-filter="all">All</button>
+      <button class="filter" data-filter="http">Non-functional</button>
+      <button class="filter" data-filter="browser">Functional</button>
+    </div>
+    <div id="runs-list" class="runs-list">
+      <p class="empty">No runs yet. Configure a test to fire the first one.</p>
+    </div>
+  </section>
+
+  <!-- ============ SCHEDULES ============ -->
+  <section id="view-schedules" class="view" hidden>
+    <h1>Schedules</h1>
+    <p class="lede">Run a test automatically on a repeating timer. If a scheduled run fails,
+      Loadstar posts an alert to your webhook (works with Slack, Discord, and Teams).</p>
+    <form id="schedule-form">
+      <div class="grid">
+        <label class="field"><span>Test</span><select id="sched-test"></select></label>
+        <label class="field"><span>Run every</span>
+          <select id="sched-interval">
+            <option value="15">15 minutes</option>
+            <option value="60" selected>hour</option>
+            <option value="360">6 hours</option>
+            <option value="1440">day</option>
+          </select></label>
+        <label class="field"><span>Alert webhook URL (optional)</span>
+          <input id="sched-webhook" placeholder="https://hooks.slack.com/services/…" /></label>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn primary">Add schedule</button>
+        <span id="sched-status" class="status" role="status"></span>
+      </div>
+    </form>
+    <div id="schedules-list" class="runs-list" style="margin-top:18px"></div>
+  </section>
+
+  <!-- ============ REPORT ============ -->
+  <section id="view-report" class="view" hidden>
+    <button class="btn ghost" id="back-to-runs">← All runs</button>
+    <div id="report"></div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <span>Loadstar · open-source performance testing · Apache-2.0</span>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: loadstar
+      POSTGRES_PASSWORD: loadstar
+      POSTGRES_DB: loadstar
+    volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loadstar"]
+      interval: 3s
+      retries: 20
+
+  api:
+    build: { context: ., dockerfile: api/Dockerfile }
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://loadstar:loadstar@db:5432/loadstar
+    ports: ["8080:8080"]
+    depends_on:
+      db: { condition: service_healthy }
+
+  worker:
+    build: { context: ., dockerfile: worker/Dockerfile }
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://loadstar:loadstar@db:5432/loadstar
+    depends_on:
+      db: { condition: service_healthy }
+    # Scale generators locally: docker compose up --scale worker=3
+
+  worker-browser:
+    build: { context: ., dockerfile: worker-browser/Dockerfile }
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://loadstar:loadstar@db:5432/loadstar
+    depends_on:
+      db: { condition: service_healthy }
+    shm_size: 1gb   # Chromium needs shared memory
+
+  # Safe practice target for beginners — test against http://demo
+  # instead of a real website. Remove this service whenever you like.
+  # A STREAMING target, so TTFT detection can be PROVEN rather than assumed.
+  #   GET /stream  first byte ~150ms, total ~1.5s  -> Loadstar must WARN
+  #   GET /slow    first byte ~1.5s,  total ~1.5s  -> Loadstar must STAY QUIET
+  # The second one is the control: without it, a detector that fired on anything
+  # slow would look like it worked.
+  stream-demo:
+    build: ./stream-demo
+    restart: unless-stopped
+
+  demo:
+    image: nginx:alpine
+
+volumes:
+  dbdata:

@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # npm dependencies (Express, pg, etc.)
+  - package-ecosystem: "npm"
+    directory: "/api"
+    schedule: { interval: "weekly" }
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
+  # GitHub Actions themselves
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule: { interval: "weekly" }
+    labels: ["dependencies"]

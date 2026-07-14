@@ -1,0 +1,268 @@
+name: CI
+on:
+  # push triggers removed to conserve private-repo CI minutes.
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with: { node-version: "20" }
+
+      # 1. Syntax-check every source file — catches the "node --check" step we run by hand
+      - name: Syntax check
+        run: |
+          for f in $(find api worker worker-browser -name '*.js' -not -path '*/node_modules/*'); do
+            node --check "$f" || exit 1
+          done
+
+      # 2. The pure-logic unit tests (histogram merge, sharding, resolve) — no DB needed
+      # SSRF gate. Caught two real IPv6 bugs on its first run - a bypass ([::1]
+      # slipped through) and an over-block (all public IPv6 was rejected). Pure DNS
+      # logic, no stack needed.
+      - name: SSRF resolve-gate (internal targets blocked, public allowed)
+        run: node verify_ssrf.mjs
+
+      - name: Unit tests
+        run: for t in worker/test/*.test.mjs; do node "$t" || exit 1; done
+
+      # 3. The SQL-param count check we wrote earlier (catches the placeholder/array mismatch)
+      - name: SQL parameter check
+        run: node ci/check-sql-params.mjs
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with: { node-version: "20" }
+      # Known-CVE scan on production deps. High/critical fails the build; lower is advisory.
+      - name: npm audit (api)
+        working-directory: api
+        run: npm audit --omit=dev --audit-level=high
+
+  # The job that would have caught today's Express 5 / pptxgenjs 4 risk. The other jobs
+  # check that the code PARSES; this one checks that the APP WORKS. A green syntax check
+  # on a route framework you never start proves nothing — Express 5 could have killed
+  # every route and the entire UI, and 'npm audit' would still have said 0 vulnerabilities.
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Boot the stack
+        run: |
+          cp .env.example .env
+          # Local-only test targets, and no AI key in CI — analysis is fail-soft, so runs
+          # still complete without it; we assert on the metrics, not on Claude.
+          echo "ALLOW_PRIVATE_TARGETS=true" >> .env
+          echo "ENABLE_MOCK_AUTH=true" >> .env
+          docker compose up -d --build api db demo worker stream-demo
+
+      - name: Wait for the API to be healthy
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8080/api/config > /dev/null; then
+              echo "API is up after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "API never became healthy"; docker compose logs api; exit 1
+
+      - name: Routes respond
+        run: |
+          fail=0
+          check() {
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$2")
+            [ "$code" = "$3" ] && echo "ok   $1 ($code)" || { echo "FAIL $1 — got $code, want $3"; fail=1; }
+          }
+          check "GET /api/config"    http://localhost:8080/api/config    200
+          check "GET /api/tests"     http://localhost:8080/api/tests     200
+          check "GET /api/runs"      http://localhost:8080/api/runs      200
+          check "GET /api/schedules" http://localhost:8080/api/schedules 200
+          check "404 handling"       http://localhost:8080/api/nope      404
+          # express.static — if this breaks, the entire web UI is dead and no other
+          # check in this file would notice.
+          check "UI /"               http://localhost:8080/              200
+          check "UI /app.js"         http://localhost:8080/app.js        200
+          exit $fail
+
+      - name: Validation still rejects bad input
+        run: |
+          body=$(curl -s -X POST http://localhost:8080/api/tests \
+            -H 'Content-Type: application/json' -d '{"name":"x"}')
+          echo "$body" | grep -q '"error"' || { echo "expected a 400 error, got: $body"; exit 1; }
+          echo "ok   invalid test rejected"
+
+      - name: End-to-end — create, run, assert results
+        run: |
+          T=$(curl -s -X POST http://localhost:8080/api/tests -H 'Content-Type: application/json' -d '{
+            "name":"ci smoke","test_type":"http","target_url":"http://demo","engine":"k6",
+            "mode":"load","virtual_users":3,"ramp_up_secs":1,"duration_secs":10,
+            "requests":[{"name":"a","method":"GET","path":"/","assert":{"body_contains":"nginx"}}]}')
+          TID=$(echo "$T" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+          [ -n "$TID" ] || { echo "test creation failed: $T"; exit 1; }
+          RID=$(curl -s -X POST http://localhost:8080/api/tests/$TID/runs -H 'Content-Type: application/json' | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+          [ -n "$RID" ] || { echo "run creation failed"; exit 1; }
+
+          for i in $(seq 1 90); do
+            status=$(curl -s http://localhost:8080/api/runs/$RID | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+            [ "$status" = "done" ] && break
+            [ "$status" = "failed" ] && { echo "run FAILED"; docker compose logs worker; exit 1; }
+            sleep 2
+          done
+
+          json=$(curl -s http://localhost:8080/api/runs/$RID)
+          echo "$json" | grep -q '"status":"done"' || { echo "run never completed: $status"; docker compose logs worker; exit 1; }
+          reqs=$(echo "$json" | grep -o '"total_requests":[0-9]*' | cut -d: -f2)
+          errs=$(echo "$json" | grep -o '"errors":[0-9]*' | head -1 | cut -d: -f2)
+          echo "ok   run completed: $reqs requests, $errs errors"
+          [ "${reqs:-0}" -gt 0 ] || { echo "no requests were made"; exit 1; }
+          [ "${errs:-1}" = "0" ] || { echo "expected 0 errors, got $errs"; exit 1; }
+          echo "RID=$RID" >> $GITHUB_ENV
+
+      # These two scripts ARE the proof that per_endpoint and status codes work.
+      # Without them those features are "worked once, on someone's laptop" — which is
+      # precisely what distributed load generation was for a week while it was marked
+      # COMPLETE and had never actually run.
+      - name: Per-endpoint breakdown separates endpoints
+        run: node verify_per_endpoint.mjs
+
+      - name: Status codes + per-endpoint history
+        run: node verify_status_regression.mjs
+
+      # E.7 #2. An asserted status is not an error. This script also proves the two
+      # ENGINES AGREE - they did not, and only the database revealed it.
+      - name: Expected status does not poison error_rate (and real errors still count)
+        run: node verify_expected_status.mjs
+
+      # TTFT. The /slow control is the point: if the detector also warned on a
+      # merely-slow endpoint it would be worthless, and nothing else would catch that.
+      - name: Streaming latency lies, and Loadstar says so (and stays quiet when it should)
+        run: node verify_ttft.mjs
+
+      - name: Exports work (HTML + PPTX)
+        run: |
+          curl -sf "http://localhost:8080/api/runs/$RID/export/html" | grep -q "TEST REPORT" \
+            || { echo "HTML export broken"; exit 1; }
+          echo "ok   HTML export"
+          # pptxgenjs is a heavy dep with major-version churn; a valid .pptx is a zip.
+          curl -sf -o /tmp/r.pptx "http://localhost:8080/api/runs/$RID/export/pptx"
+          unzip -l /tmp/r.pptx | grep -q "docProps" || { echo "PPTX is not a valid archive"; exit 1; }
+          echo "ok   PPTX export ($(stat -c%s /tmp/r.pptx) bytes)"
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
+
+  # ===========================================================================
+  # DISTRIBUTED. This job exists because distributed load generation was marked
+  # COMPLETE for a week, had NO automated check, and HAD NEVER ONCE RUN. Every
+  # feature shipped into it in that week was unverified by construction.
+  #
+  # The merge is currently proven by a psql query someone typed by hand. Hand-run
+  # proofs evaporate. This makes it permanent.
+  # ===========================================================================
+  distributed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with: { node-version: "20" }
+
+      - name: Bring up the stack with ONE worker
+        run: |
+          cp .env.example .env
+          echo "ALLOW_PRIVATE_TARGETS=true" >> .env
+          docker compose up -d --build api db demo worker stream-demo
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:8080/api/config > /dev/null && break
+            sleep 1
+          done
+
+      # THE PRE-FLIGHT. With 1 worker, a 2-shard run needs 3 and must REFUSE — in
+      # under a second, naming the cure. It used to deadlock for 153 seconds and
+      # report "timeout: 0/2 shards done", which named nothing. That fix is one
+      # careless refactor from regressing and nothing would notice.
+      - name: A distributed run with too few workers FAILS FAST, not after 153s
+        run: |
+          T=$(curl -s -X POST http://localhost:8080/api/tests -H 'Content-Type: application/json' -d '{
+            "name":"ci preflight","test_type":"http","target_url":"http://demo","engine":"k6",
+            "mode":"load","virtual_users":200,"ramp_up_secs":0,"duration_secs":10}')
+          TID=$(echo "$T" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+          RID=$(curl -s -X POST http://localhost:8080/api/tests/$TID/runs -H 'Content-Type: application/json' | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+          # It must be refused within SECONDS, not minutes.
+          for i in $(seq 1 15); do
+            status=$(curl -s http://localhost:8080/api/runs/$RID | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+            [ "$status" = "failed" ] && break
+            sleep 1
+          done
+          json=$(curl -s http://localhost:8080/api/runs/$RID)
+          echo "$json" | grep -q '"status":"failed"' || { echo "FAIL: a 2-shard run with 1 worker did not fail fast (status=$status)"; docker compose logs worker; exit 1; }
+          echo "$json" | grep -q "scale worker=" || { echo "FAIL: the error does not name the CURE, only the symptom"; echo "$json"; exit 1; }
+          echo "ok   refused in seconds, and the message names the fix"
+
+      - name: Scale to 3 workers
+        run: |
+          docker compose up -d --scale worker=3
+          sleep 15
+
+      # THE ASSERTION THAT WAS A PSQL QUERY IN A SCROLLBACK.
+      - name: Distributed run — the shard merge must not drop a single request
+        run: |
+          T=$(curl -s -X POST http://localhost:8080/api/tests -H 'Content-Type: application/json' -d '{
+            "name":"ci distributed","test_type":"http","target_url":"http://demo","engine":"k6",
+            "mode":"load","virtual_users":200,"ramp_up_secs":0,"duration_secs":15,
+            "requests":[
+              {"name":"GET /","method":"GET","path":"/"},
+              {"name":"GET /index.html","method":"GET","path":"/index.html"},
+              {"name":"GET /nope","method":"GET","path":"/nope"}
+            ]}')
+          TID=$(echo "$T" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+          RID=$(curl -s -X POST http://localhost:8080/api/tests/$TID/runs -H 'Content-Type: application/json' | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+          for i in $(seq 1 120); do
+            status=$(curl -s http://localhost:8080/api/runs/$RID | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+            [ "$status" = "done" ] && break
+            [ "$status" = "failed" ] && { echo "FAIL: distributed run failed"; docker compose logs worker; exit 1; }
+            sleep 2
+          done
+          [ "$status" = "done" ] || { echo "FAIL: never completed (status=$status)"; docker compose logs worker; exit 1; }
+
+          curl -s http://localhost:8080/api/runs/$RID > /tmp/run.json
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync("/tmp/run.json", "utf8"));
+            const s = r.summary || {};
+            const eps = s.per_endpoint || [];
+            let fail = 0;
+            const ck = (n, c, d = "") => { console.log((c ? "ok   " : "FAIL ") + n + (c ? "" : "  -> " + d)); if (!c) fail++; };
+
+            ck("the run distributed across shards", (r.shard_count || 0) > 1 || /generator/.test(JSON.stringify(r)), "shard_count=" + r.shard_count);
+            ck("per_endpoint survived the merge", eps.length === 3, "got " + eps.length + " endpoints");
+
+            // THE ONE THAT MATTERS. An authoritative table that does not add up is
+            // worse than no table. Averaging p95s across shards is the classic wrong
+            // answer the exact-histogram design exists to prevent.
+            const sum = eps.reduce((a, e) => a + (e.requests || 0), 0);
+            ck("per-endpoint requests SUM to total_requests", sum === s.total_requests,
+               "sum=" + sum + " total=" + s.total_requests);
+
+            const nope = eps.find(e => e.name === "GET /nope");
+            ck("/nope is isolated as the errorer", !!nope && nope.errors > 0);
+            ck("the healthy endpoints are clean", eps.filter(e => e.name !== "GET /nope").every(e => e.errors === 0));
+            ck("status codes survived the merge", !!(nope && nope.status_codes && nope.status_codes["404"] > 0),
+               JSON.stringify(nope && nope.status_codes));
+
+            // The merge was silently discarding this until July 13.
+            ck("measurement_trust survived the merge", !!s.measurement_trust,
+               "the biggest runs were the ONLY ones flying blind");
+
+            process.exit(fail ? 1 : 0);
+          '
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs

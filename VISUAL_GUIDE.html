@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loadstar — The Complete Visual Guide</title>
+<style>
+  :root{--paper:#F6F8FA;--ink:#182430;--ink2:#5A6B7A;--grid:#E2E8ED;--line:#C9D3DB;
+    --blue:#1E5EFF;--coral:#FF4F30;--green:#14A06B;--amber:#E8960C;--card:#fff;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Georgia,'Times New Roman',serif;color:var(--ink);line-height:1.65;
+    background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/100% 28px,
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/28px 100%,var(--paper);}
+  main{max-width:820px;margin:0 auto;padding:48px 24px 96px}
+  h1{font-family:Helvetica,Arial,sans-serif;font-size:38px;letter-spacing:-0.02em;margin:0}
+  h2{font-family:Helvetica,Arial,sans-serif;font-size:24px;margin:56px 0 8px;letter-spacing:-0.01em}
+  h3{font-family:Helvetica,Arial,sans-serif;font-size:17px;margin:28px 0 6px}
+  .eyebrow{font-family:'Courier New',monospace;font-size:12px;letter-spacing:.15em;
+    text-transform:uppercase;color:var(--ink2)}
+  p{margin:10px 0}
+  figure{margin:20px 0;background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:14px;box-shadow:0 2px 10px rgba(24,36,48,.05)}
+  figure svg{width:100%;height:auto;display:block;border-radius:6px}
+  figcaption{font-family:'Courier New',monospace;font-size:12px;color:var(--ink2);margin-top:10px}
+  ol li,ul li{margin:8px 0}
+  code{font-family:'Courier New',monospace;font-size:.9em;background:var(--paper);
+    border:1px solid var(--grid);border-radius:4px;padding:1px 6px}
+  .callout{border-left:3px solid var(--blue);background:var(--card);padding:12px 18px;
+    border-radius:0 8px 8px 0;margin:16px 0}
+  .warn{border-left-color:var(--coral)}
+  .good{border-left-color:var(--green)}
+  table{border-collapse:collapse;width:100%;background:var(--card);font-size:15px}
+  th,td{border:1px solid var(--grid);padding:8px 12px;text-align:left}
+  th{font-family:Helvetica,Arial,sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)}
+  nav{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 20px;margin:24px 0;
+    font-family:Helvetica,Arial,sans-serif;font-size:14px}
+  nav a{color:var(--blue);text-decoration:none}
+</style>
+</head>
+<body>
+<main>
+  <span class="eyebrow">Loadstar · Complete Visual Guide</span>
+  <h1>Every screen, every feature — explained for beginners</h1>
+  <p>This guide walks through the whole tool with accurate illustrations of each screen —
+  drawn with the exact colors, layout, and labels of the real interface, so what you see
+  here is what you'll see at <code>http://localhost:8080</code>.</p>
+
+  <nav><b>Contents:</b>
+    <a href="#s0">0 One-time setup</a> ·
+    <a href="#s1">1 Load tests</a> ·
+    <a href="#s2">2 Reading reports</a> ·
+    <a href="#s3">3 CSV data</a> ·
+    <a href="#s4">4 Browser tests &amp; Selenium import</a> ·
+    <a href="#s5">5 Browser reports &amp; browser-under-load</a> ·
+    <a href="#s6">6 Exports (HTML/PDF/PowerPoint/email)</a> ·
+    <a href="#s7">7 Email reports with trends</a> ·
+    <a href="#s8">8 Schedules &amp; alerts</a> ·
+    <a href="#s9">9 CI/CD gate</a> ·
+<a href="#s11">10 Multi-request</a> ·
+    <a href="#s12">11 Response chaining</a> ·
+    <a href="#s13">12 Cross-browser</a> ·
+    <a href="#s14">13 Script upload</a> ·
+    <a href="#s15">14 AI analysis</a> ·
+    <a href="#s16">15 Cheat sheet</a>
+  </nav>
+
+  <!-- ==================== 0. SETUP ==================== -->
+  <h2 id="s0">0 · One-time setup — from clone to running tool</h2>
+  <p>Do this once, and every visit afterwards is just one command. Total time: about
+  15 minutes, most of it waiting for downloads. No coding knowledge needed.</p>
+
+  <h3>Step 1 — Install Docker Desktop</h3>
+  <p>Docker is a free program that runs Loadstar for you, so you never install databases
+  or programming languages yourself. Download <b>Docker Desktop</b> from
+  <code>docker.com</code> (Windows or Mac), install it like any normal app, open it, and
+  wait until it says "Docker Desktop is running."</p>
+  <div class="callout warn"><b>Older Mac?</b> Current Docker Desktop needs a recent macOS.
+  On older machines (like a 2015 MacBook Pro on macOS Monterey) install the archived
+  version 4.41.2 from Docker's release notes — or skip installing entirely and use the
+  cloud option at the end of this section.</div>
+
+  <h3>Step 2 — Clone Loadstar and open a terminal</h3>
+  <ol>
+    <li>Clone the repo: <code>git clone https://github.com/kalkiyama/loadstar.git</code></li>
+    <li>Open a terminal — the window where you type commands instead of clicking:<br>
+      <b>Windows:</b> Start key → type <code>powershell</code> → Enter.<br>
+      <b>Mac:</b> Cmd+Space → type <code>terminal</code> → Enter.</li>
+    <li>Move into the folder: type <code>cd loadstar</code> and press Enter.</li>
+  </ol>
+
+  <h3>Step 3 — Create your settings file and start everything</h3>
+  <figure>
+  <svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica,Arial,sans-serif">
+    <rect width="760" height="190" fill="#F6F8FA"/>
+    <rect x="40" y="12" width="680" height="166" rx="10" fill="#182430"/>
+    <circle cx="62" cy="30" r="5" fill="#FF4F30"/><circle cx="78" cy="30" r="5" fill="#E8960C"/><circle cx="94" cy="30" r="5" fill="#14A06B"/>
+    <g font-family="monospace" font-size="11" fill="#E7EDF3">
+      <text x="60" y="58"><tspan fill="#9FB4C6">$</tspan> cd loadstar</text>
+      <text x="60" y="78"><tspan fill="#9FB4C6">$</tspan> cp .env.example .env</text>
+      <text x="60" y="98"><tspan fill="#9FB4C6">$</tspan> docker compose up --build</text>
+      <text x="60" y="122" fill="#5A6B7A">… (first time: several minutes of downloading JMeter, k6, Chromium) …</text>
+      <text x="60" y="142" fill="#14A06B">[api] Loadstar listening on :8080</text>
+      <text x="60" y="160" fill="#14A06B">[worker] Loadstar worker started, polling for runs…</text>
+    </g>
+  </svg>
+  <figcaption>Fig. 0 — The three setup commands and the "ready" lines to wait for. On Windows
+  PowerShell, use <code>copy .env.example .env</code> instead of <code>cp</code>.</figcaption>
+  </figure>
+  <ul>
+    <li><code>cp .env.example .env</code> copies the settings template to a real settings
+      file named <code>.env</code>. It works immediately with no editing; later you can open
+      it in Notepad/TextEdit to add your Anthropic API key (for AI analysis) and email settings.</li>
+    <li><code>docker compose up --build</code> downloads and starts everything: the web app,
+      the database, the JMeter/k6 load worker, the Playwright browser worker, and the safe
+      practice website. <b>The first run takes several minutes</b> — that's normal. Later
+      starts need only <code>docker compose up</code> (no <code>--build</code>) and take seconds.</li>
+    <li>When you see <code>Loadstar listening on :8080</code>, open your web browser and go to
+      <b><code>http://localhost:8080</code></b>.</li>
+    <li>To stop Loadstar: click in the terminal and press <code>Ctrl+C</code>.</li>
+  </ul>
+
+  <h3>Step 4 — Fire your first safe test</h3>
+  <p>On the New test screen (Fig. 1 below), enter name <code>My first test</code>, Target URL
+  <b><code>http://demo</code></b> (the built-in practice site — hurts nobody), 10 virtual users,
+  30 seconds, and click <b>Save &amp; run test</b>. Your first report appears in under a minute.</p>
+
+  <h3>No Docker? Run it in the cloud with GitHub Codespaces (works on any old laptop)</h3>
+  <p>Codespaces gives you a full development computer <i>inside your browser</i> — free for
+  a generous number of hours per month. Your laptop just displays the screen; the cloud
+  does the heavy lifting. Nothing gets installed on your machine.</p>
+
+  <p><b>Part A — Put the project on GitHub (one time):</b></p>
+  <ol>
+    <li>Go to <code>github.com</code> and create a free account (Sign up → follow the prompts).</li>
+    <li>Click the <b>+</b> icon (top right) → <b>New repository</b>. Name it
+      <code>loadstar</code>, choose <b>Private</b>, and click <b>Create repository</b>.</li>
+    <li>On the new repo's page, click <b>uploading an existing file</b> (or
+      <b>Add file → Upload files</b>).</li>
+    <li>On your computer, open the <code>loadstar</code> folder, select
+      <b>everything inside it</b> (Ctrl+A / Cmd+A), and drag it all into the upload area
+      in your browser. Wait for the file list to finish loading — there are ~50 files.</li>
+    <li>Click the green <b>Commit changes</b> button at the bottom. Your project now lives
+      safely on GitHub.</li>
+  </ol>
+
+  <div class="callout warn"><b>Known gotcha — hidden files don't upload.</b> Two files start
+  with a dot (<code>.env.example</code> and <code>.gitignore</code>), and Finder/File Explorer
+  hide dot-files, so Ctrl+A misses them and they silently never reach GitHub. Don't worry —
+  recreate both in the codespace terminal with one paste each. For <code>.env</code>
+  (skipping the copy step entirely):
+  <pre style="background:#182430;color:#E7EDF3;padding:10px 14px;border-radius:8px;font-size:11px;overflow-x:auto">cat &gt; .env &lt;&lt; 'EOF'
+ANTHROPIC_API_KEY=
+ANTHROPIC_MODEL=claude-sonnet-4-6
+LOADSTAR_API_KEY=
+MAX_VIRTUAL_USERS=500
+MAX_DURATION_SECS=3600
+MAX_BROWSER_USERS=5
+BROWSER_STEP_TIMEOUT_MS=15000
+ALERT_ERROR_RATE_PCT=5
+ALLOW_PRIVATE_TARGETS=true
+SKIP_TARGET_VERIFICATION=false
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
+REPORT_EMAIL_TO=
+APP_BASE_URL=http://localhost:8080
+EOF</pre>
+  And <code>.gitignore</code> — important before ever making the repo public, since it's what
+  keeps your real API keys out of GitHub:
+  <pre style="background:#182430;color:#E7EDF3;padding:10px 14px;border-radius:8px;font-size:11px">printf 'node_modules/\n.env\n*.jtl\n*.log\ndbdata/\n' &gt; .gitignore</pre>
+  To check what actually made it: run <code>ls -a</code> in the terminal — it lists hidden
+  files too.</div>
+
+  <p><b>Part B — Start Loadstar in a codespace:</b></p>
+  <figure>
+  <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica,Arial,sans-serif">
+    <rect width="760" height="300" fill="#F6F8FA"/>
+    <!-- left: repo page with Code button -->
+    <rect x="30" y="16" width="330" height="120" rx="8" fill="#fff" stroke="#C9D3DB"/>
+    <text x="48" y="42" font-size="12" font-weight="bold" fill="#182430">yourname / loadstar</text>
+    <text x="48" y="60" font-size="9" fill="#5A6B7A">Private repository</text>
+    <rect x="240" y="30" width="100" height="26" rx="6" fill="#14A06B"/>
+    <text x="258" y="47" font-size="11" fill="#fff" font-weight="bold">&lt;&gt; Code ▾</text>
+    <rect x="180" y="62" width="160" height="62" rx="8" fill="#fff" stroke="#C9D3DB"/>
+    <text x="192" y="80" font-size="9" fill="#5A6B7A">Local</text>
+    <text x="238" y="80" font-size="9" font-weight="bold" fill="#182430">Codespaces</text>
+    <rect x="192" y="90" width="136" height="24" rx="6" fill="#14A06B"/>
+    <text x="200" y="106" font-size="9" fill="#fff" font-weight="bold">Create codespace on main</text>
+    <text x="30" y="158" font-size="10" fill="#5A6B7A" font-family="monospace">① green Code button → Codespaces tab → Create</text>
+    <!-- right: codespace editor with terminal + port popup -->
+    <rect x="390" y="16" width="340" height="240" rx="8" fill="#182430"/>
+    <rect x="390" y="16" width="340" height="24" rx="8" fill="#0F1922"/>
+    <text x="404" y="32" font-size="9" fill="#9FB4C6">yourname-loadstar — Codespace (in your browser)</text>
+    <g font-family="monospace" font-size="9" fill="#E7EDF3">
+      <text x="406" y="62"><tspan fill="#9FB4C6">$</tspan> cp .env.example .env</text>
+      <text x="406" y="80"><tspan fill="#9FB4C6">$</tspan> docker compose up --build</text>
+      <text x="406" y="98" fill="#5A6B7A">… downloading images (first time only) …</text>
+      <text x="406" y="116" fill="#14A06B">[api] Loadstar listening on :8080</text>
+    </g>
+    <!-- port popup -->
+    <rect x="440" y="150" width="270" height="72" rx="8" fill="#fff" stroke="#C9D3DB"/>
+    <text x="456" y="172" font-size="10" font-weight="bold" fill="#182430">Your application running on port 8080</text>
+    <text x="456" y="186" font-size="9" fill="#5A6B7A">is available.</text>
+    <rect x="456" y="194" width="110" height="20" rx="5" fill="#1E5EFF"/>
+    <text x="470" y="208" font-size="9" fill="#fff" font-weight="bold">Open in Browser</text>
+    <text x="390" y="278" font-size="10" fill="#5A6B7A" font-family="monospace">② same two commands → ③ click "Open in Browser" when the popup appears</text>
+  </svg>
+  <figcaption>Fig. 0b — The Codespaces path: the green Code button on your repo, the terminal
+  running the same two setup commands, and the port-8080 popup that opens Loadstar in a new tab.</figcaption>
+  </figure>
+
+  <ol>
+    <li>On your repo page, click the green <b>&lt;&gt; Code</b> button → <b>Codespaces</b> tab
+      → <b>Create codespace on main</b>. Wait a minute while your cloud computer starts —
+      you'll see an editor with a terminal panel at the bottom.</li>
+    <li>Click into that terminal and type the same two commands as the local path:<br>
+      <code>cp .env.example .env</code> then <code>docker compose up --build</code>.<br>
+      <span style="font-size:13px;color:var(--ink2)">If <code>cp</code> says "No such file or
+      directory," the hidden files didn't upload — use the one-paste fix in the yellow box
+      above instead of the copy command.</span></li>
+    <li>When the build finishes, a popup appears: <i>"Your application running on port 8080
+      is available"</i> — click <b>Open in Browser</b>. Loadstar opens in a new tab.
+      (Missed the popup? Click the <b>Ports</b> tab next to the terminal, find port 8080,
+      and click the globe icon.)</li>
+    <li>Run your first test against <code>http://demo</code> exactly as in Step 4 above.</li>
+  </ol>
+
+  <p><b>Coming back later:</b> codespaces pause when idle to save your free hours. To resume,
+  go to your repo → <b>Code → Codespaces</b> → click your existing codespace (don't create a
+  new one), then in the terminal run <code>docker compose up</code> (no <code>--build</code>
+  needed). Your tests and results are still there — they live in the codespace's database.</p>
+
+  <div class="callout"><b>Good to know:</b> GitHub's free plan includes roughly 60 hours of
+  codespace time per month on the default machine — plenty for learning and testing. Stop the
+  clock anytime: Code → Codespaces → ⋯ menu → <b>Stop codespace</b>. And because you uploaded
+  the project in Part A, you've accidentally done something smart: your code is now
+  version-controlled on GitHub, which is exactly where it needs to be for the open-source
+  launch later.</div>
+
+  <div class="callout"><b>If anything goes wrong:</b> the terminal is your friend. Lines
+  starting with <code>[api]</code>, <code>[worker]</code>, or <code>[browser]</code> usually say
+  exactly what failed. The most common first-day issues: Docker Desktop isn't running yet
+  (open the app first), or you're not inside the loadstar folder (run
+  <code>cd loadstar</code> again). A fuller troubleshooting table is in
+  GETTING_STARTED.md.</div>
+
+  <!-- ==================== 1. LOAD TEST ==================== -->
+  <h2 id="s1">1 · The home screen &amp; creating a load test</h2>
+  <p>When Loadstar opens you land on <b>New test</b>. The dark strip under the header is
+  the <i>oscilloscope</i> — flat when idle, and it draws your response-time trace when a
+  test runs. The form below shows everything a load test can use, including the two new
+  controls: the <b>Engine</b> picker and the <b>pass/fail thresholds</b>.</p>
+
+  <figure>
+  <svg viewBox="0 0 760 560" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica,Arial,sans-serif">
+    <rect width="760" height="560" fill="#F6F8FA"/>
+    <rect width="760" height="44" fill="#fff"/><line x1="0" y1="44" x2="760" y2="44" stroke="#C9D3DB"/>
+    <circle cx="24" cy="22" r="6" fill="#1E5EFF"/>
+    <text x="38" y="27" font-size="15" font-weight="bold" fill="#182430">Loadstar</text>
+    <text x="112" y="26" font-size="8" fill="#5A6B7A" letter-spacing="1">PERFORMANCE LAB</text>
+    <rect x="498" y="10" width="74" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/>
+    <text x="512" y="26" font-size="11" fill="#182430">New test</text>
+    <text x="592" y="26" font-size="11" fill="#5A6B7A">Runs</text>
+    <text x="648" y="26" font-size="11" fill="#5A6B7A">Schedules</text>
+    <rect y="44" width="760" height="30" fill="#182430"/>
+    <path d="M0,59 Q60,56 120,59 T240,59 T360,59 T480,59 T600,59 T760,59" stroke="#1E5EFF" stroke-width="1.5" fill="none"/>
+    <text x="580" y="62" font-size="8" fill="#9FB4C6" letter-spacing="1">IDLE — WAITING FOR SIGNAL</text>
+    <line x1="0" y1="74" x2="760" y2="74" stroke="#1E5EFF" stroke-width="2"/>
+    <rect x="40" y="92" width="680" height="448" rx="8" fill="#fff" stroke="#C9D3DB"/>
+    <!-- type toggle -->
+    <rect x="60" y="108" width="320" height="38" rx="6" fill="#EDF2FF" stroke="#1E5EFF"/>
+    <text x="72" y="124" font-size="12" font-weight="bold" fill="#182430">Load test</text>
+    <text x="72" y="138" font-size="8" fill="#5A6B7A">speed under pressure · JMeter</text>
+    <rect x="386" y="108" width="314" height="38" rx="6" fill="#F6F8FA" stroke="#C9D3DB"/>
+    <text x="398" y="124" font-size="12" font-weight="bold" fill="#182430">Browser test</text>
+    <text x="398" y="138" font-size="8" fill="#5A6B7A">clicks like a real user · Playwright</text>
+    <!-- name + email -->
+    <text x="60" y="170" font-size="9" fill="#5A6B7A" letter-spacing="1">TEST NAME</text>
+    <rect x="60" y="176" width="310" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/>
+    <text x="70" y="192" font-size="10" font-family="monospace" fill="#182430">Checkout API — baseline</text>
+    <text x="390" y="170" font-size="9" fill="#5A6B7A" letter-spacing="1">EMAIL REPORT TO (OPTIONAL)</text>
+    <rect x="390" y="176" width="310" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/>
+    <text x="400" y="192" font-size="10" font-family="monospace" fill="#182430">qa-team@yourco.com</text>
+    <!-- url -->
+    <text x="60" y="224" font-size="9" fill="#5A6B7A" letter-spacing="1">TARGET URL</text>
+    <rect x="60" y="230" width="640" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/>
+    <text x="70" y="246" font-size="10" font-family="monospace" fill="#182430">https://staging.yoursite.com/api/checkout</text>
+    <!-- NEW: engine picker -->
+    <text x="60" y="278" font-size="9" fill="#1E5EFF" letter-spacing="1" font-weight="bold">ENGINE  ★ NEW</text>
+    <rect x="60" y="284" width="130" height="34" rx="5" fill="#EDF2FF" stroke="#1E5EFF"/>
+    <text x="72" y="298" font-size="11" font-weight="bold" fill="#182430">JMeter</text>
+    <text x="72" y="311" font-size="8" fill="#5A6B7A">battle-tested</text>
+    <rect x="196" y="284" width="130" height="34" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/>
+    <text x="208" y="298" font-size="11" font-weight="bold" fill="#182430">k6</text>
+    <text x="208" y="311" font-size="8" fill="#5A6B7A">modern &amp; light</text>
+    <!-- mode + numbers -->
+    <text x="360" y="278" font-size="9" fill="#5A6B7A" letter-spacing="1">TEST MODE</text>
+    <rect x="360" y="284" width="76" height="34" rx="5" fill="#EDF2FF" stroke="#1E5EFF"/><text x="374" y="305" font-size="10" fill="#182430">Load</text>
+    <rect x="442" y="284" width="76" height="34" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="452" y="305" font-size="10" fill="#5A6B7A">Stress</text>
+    <rect x="524" y="284" width="76" height="34" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="536" y="305" font-size="10" fill="#5A6B7A">Spike</text>
+    <rect x="606" y="284" width="76" height="34" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="620" y="305" font-size="10" fill="#5A6B7A">Soak</text>
+    <text x="60" y="346" font-size="9" fill="#5A6B7A" letter-spacing="1">VIRTUAL USERS</text>
+    <rect x="60" y="352" width="100" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="72" y="368" font-size="10" font-family="monospace" fill="#182430">100</text>
+    <text x="180" y="346" font-size="9" fill="#5A6B7A" letter-spacing="1">RAMP-UP (S)</text>
+    <rect x="180" y="352" width="100" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="192" y="368" font-size="10" font-family="monospace" fill="#182430">15</text>
+    <text x="300" y="346" font-size="9" fill="#5A6B7A" letter-spacing="1">DURATION (S)</text>
+    <rect x="300" y="352" width="100" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="312" y="368" font-size="10" font-family="monospace" fill="#182430">120</text>
+    <!-- CSV -->
+    <text x="60" y="404" font-size="9" fill="#5A6B7A" letter-spacing="1">TEST DATA — CSV FILE (OPTIONAL)</text>
+    <rect x="60" y="410" width="180" height="24" rx="5" fill="#fff" stroke="#C9D3DB"/>
+    <text x="70" y="426" font-size="10" fill="#182430">Choose file… users.csv</text>
+    <text x="252" y="426" font-size="9" fill="#14A06B" font-family="monospace">Loaded 50 rows. Placeholders: ${username} ${product_id}</text>
+    <!-- NEW: SLA -->
+    <text x="60" y="462" font-size="9" fill="#1E5EFF" letter-spacing="1" font-weight="bold">PASS/FAIL THRESHOLDS — FOR CI/CD (OPTIONAL)  ★ NEW</text>
+    <text x="60" y="480" font-size="9" fill="#5A6B7A" letter-spacing="1">MAX P95 (MS)</text>
+    <rect x="60" y="486" width="100" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="72" y="502" font-size="10" font-family="monospace" fill="#182430">500</text>
+    <text x="180" y="480" font-size="9" fill="#5A6B7A" letter-spacing="1">MAX ERROR RATE (%)</text>
+    <rect x="180" y="486" width="100" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="192" y="502" font-size="10" font-family="monospace" fill="#182430">1</text>
+    <rect x="560" y="484" width="140" height="30" rx="6" fill="#1E5EFF"/>
+    <text x="580" y="503" font-size="12" fill="#fff" font-weight="bold">Save &amp; run test</text>
+  </svg>
+  <figcaption>Fig. 1 — The full load test form: Engine picker (JMeter or k6), the four modes,
+  CSV data with its placeholders confirmed in green, per-test email recipient, and the new
+  pass/fail thresholds that power the CI/CD gate.</figcaption>
+  </figure>
+
+  <ul>
+    <li><b>Engine:</b> both produce identical reports. JMeter is the 20-year industry standard;
+      k6 is lighter and faster to start. Beginners can just leave JMeter selected.</li>
+    <li><b>Modes:</b> Load = ramp &amp; hold · Stress = keep climbing until it breaks ·
+      Spike = sudden burst · Soak = long endurance run.</li>
+    <li><b>Thresholds:</b> optional — but set them and every run gets a hard SLA pass/fail
+      that your CI pipeline can act on (section 9).</li>
+  </ul>
+
+  <!-- ==================== 2. LOAD REPORT ==================== -->
+  <h2 id="s2">2 · Reading a load test report</h2>
+
+  <figure>
+  <svg viewBox="0 0 760 470" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica,Arial,sans-serif">
+    <rect width="760" height="470" fill="#F6F8FA"/>
+    <rect y="0" width="760" height="30" fill="#182430"/>
+    <path d="M0,22 L60,18 L120,20 L180,12 L240,15 L300,9 L360,13 L420,7 L480,12 L540,10 L600,15 L660,9 L760,12" stroke="#1E5EFF" stroke-width="1.5" fill="none"/>
+    <text x="520" y="18" font-size="8" fill="#9FB4C6" letter-spacing="1">TRACE · CHECKOUT API · P95 380MS</text>
+    <line x1="0" y1="30" x2="760" y2="30" stroke="#1E5EFF" stroke-width="2"/>
+    <text x="50" y="64" font-size="18" font-weight="bold" fill="#182430">Checkout API — baseline</text>
+    <rect x="290" y="50" width="46" height="17" rx="9" fill="#E3F4EC"/><text x="299" y="62" font-size="8" fill="#14A06B" letter-spacing="1">DONE</text>
+    <text x="348" y="62" font-size="9" font-family="monospace" fill="#5A6B7A">load · 100 VU · staging.yoursite.com</text>
+    <g font-family="monospace">
+      <rect x="50" y="80" width="155" height="52" rx="7" fill="#fff" stroke="#C9D3DB"/>
+      <text x="62" y="97" font-size="8" fill="#5A6B7A" font-family="Helvetica" letter-spacing="1">THROUGHPUT</text>
+      <text x="62" y="121" font-size="17" fill="#182430">94.7 <tspan font-size="10" fill="#5A6B7A">req/s</tspan></text>
+      <rect x="217" y="80" width="155" height="52" rx="7" fill="#fff" stroke="#C9D3DB"/>
+      <text x="229" y="97" font-size="8" fill="#5A6B7A" font-family="Helvetica" letter-spacing="1">ERROR RATE</text>
+      <text x="229" y="121" font-size="17" fill="#FF4F30">2.1 <tspan font-size="10" fill="#5A6B7A">%</tspan></text>
+      <rect x="384" y="80" width="155" height="52" rx="7" fill="#fff" stroke="#C9D3DB"/>
+      <text x="396" y="97" font-size="8" fill="#5A6B7A" font-family="Helvetica" letter-spacing="1">P95</text>
+      <text x="396" y="121" font-size="17" fill="#182430">380 <tspan font-size="10" fill="#5A6B7A">ms</tspan></text>
+      <rect x="551" y="80" width="155" height="52" rx="7" fill="#fff" stroke="#C9D3DB"/>
+      <text x="563" y="97" font-size="8" fill="#5A6B7A" font-family="Helvetica" letter-spacing="1">P99</text>
+      <text x="563" y="121" font-size="17" fill="#182430">620 <tspan font-size="10" fill="#5A6B7A">ms</tspan></text>
+    </g>
+    <rect x="50" y="146" width="656" height="130" rx="8" fill="#fff" stroke="#C9D3DB"/>
+    <g stroke="#E2E8ED"><line x1="90" y1="164" x2="686" y2="164"/><line x1="90" y1="194" x2="686" y2="194"/><line x1="90" y1="224" x2="686" y2="224"/><line x1="90" y1="254" x2="686" y2="254"/></g>
+    <path d="M90,244 L150,236 L210,238 L270,220 L330,228 L390,212 L450,220 L510,204 L570,214 L630,200 L686,208" stroke="#1E5EFF" stroke-width="2" fill="none"/>
+    <path d="M90,254 L150,242 L210,240 L270,238 L330,237 L390,237 L450,236 L510,237 L570,236 L630,237 L686,237" stroke="#14A06B" stroke-width="1.5" fill="none"/>
+    <circle cx="330" cy="228" r="3" fill="#FF4F30"/><circle cx="510" cy="204" r="3" fill="#FF4F30"/>
+    <!-- AI card with trend + pros/cons -->
+    <rect x="50" y="290" width="656" height="166" rx="8" fill="#fff" stroke="#C9D3DB"/>
+    <rect x="50" y="290" width="3" height="166" fill="#1E5EFF"/>
+    <text x="70" y="312" font-size="8" fill="#5A6B7A" letter-spacing="1.5">AI ANALYSIS · CLAUDE</text>
+    <text x="70" y="336" font-size="16" font-weight="bold" fill="#E8960C">DEGRADED</text>
+    <text x="172" y="335" font-size="11" font-family="monospace" fill="#5A6B7A">▼ regressing</text>
+    <text x="70" y="358" font-size="11" fill="#182430">p95 rose 44% versus the previous run while errors appeared for the first time.</text>
+    <text x="70" y="384" font-size="11" font-weight="bold" fill="#14A06B">What went well</text>
+    <text x="82" y="400" font-size="10" fill="#182430">• Throughput held steady at ~95 req/s despite the latency rise</text>
+    <text x="380" y="384" font-size="11" font-weight="bold" fill="#FF4F30">Concerns</text>
+    <text x="392" y="400" font-size="10" fill="#182430">• p95 380ms vs 264ms last run (+44%)</text>
+    <text x="392" y="414" font-size="10" fill="#182430">• Error rate 2.1% vs 0% previously</text>
+    <text x="70" y="436" font-size="11" font-weight="bold" fill="#182430">Recommendations</text>
+    <text x="82" y="450" font-size="10" fill="#182430">• Check the most recent deploy   • Inspect DB connection pool saturation</text>
+  </svg>
+  <figcaption>Fig. 2 — A finished load report. New since the last guide: the AI card now shows a
+  <b>trend</b> (▲ improving / ▼ regressing / ► stable) comparing the last 5 runs, plus
+  "What went well" and "Concerns" with real numbers.</figcaption>
+  </figure>
+
+  <p>Read it in this order: <b>Error rate</b> first (should be ~0), then <b>p95</b>
+  (95% of requests were faster than this), then the blue line — flat is healthy,
+  climbing means the target struggles as pressure builds. Then let Claude's card
+  tell you whether this is better or worse than your recent history.</p>
+
+  <!-- ==================== 3. CSV ==================== -->
+  <h2 id="s3">3 · Data-driven tests with CSV files</h2>
+  <p>Real users don't all do the same thing. Upload a CSV whose first row names the
+  columns, and every virtual user pulls a different row:</p>
+  <pre style="background:#182430;color:#E7EDF3;padding:14px 18px;border-radius:8px;font-size:13px">username,password,product_id
+alice,Secret123,1001
+bob,Hunter456,1002
+carol,Passw0rd,1003</pre>
+  <p>The moment you pick the file, Loadstar confirms in green how many rows loaded and
+  lists your placeholders (see Fig. 1). Use them anywhere —
+  URL <code>…/products/${product_id}</code>, headers, or body
+  <code>{"user": "${username}"}</code>. Works identically on both engines, JMeter and k6.</p>
+
+  <!-- ==================== 4. BROWSER TEST ==================== -->
+  <h2 id="s4">4 · Browser tests, Selenium import &amp; browser-under-load</h2>
+  <p>Click <b>Browser test</b> in the toggle: load fields disappear and the
+  <b>step builder</b> appears. Each row is one action a real Chrome browser performs.</p>
+
+  <figure>
+  <svg viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica,Arial,sans-serif">
+    <rect width="760" height="430" fill="#F6F8FA"/>
+    <rect x="30" y="18" width="700" height="396" rx="8" fill="#fff" stroke="#C9D3DB"/>
+    <rect x="50" y="32" width="330" height="36" rx="6" fill="#F6F8FA" stroke="#C9D3DB"/>
+    <text x="62" y="47" font-size="12" font-weight="bold" fill="#182430">Load test</text>
+    <text x="62" y="60" font-size="8" fill="#5A6B7A">speed under pressure · JMeter</text>
+    <rect x="386" y="32" width="324" height="36" rx="6" fill="#EDF2FF" stroke="#1E5EFF"/>
+    <text x="398" y="47" font-size="12" font-weight="bold" fill="#182430">Browser test</text>
+    <text x="398" y="60" font-size="8" fill="#5A6B7A">clicks like a real user · Playwright</text>
+    <text x="50" y="92" font-size="9" fill="#5A6B7A" letter-spacing="1">START PAGE URL</text>
+    <rect x="50" y="98" width="660" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/>
+    <text x="60" y="114" font-size="10" font-family="monospace" fill="#182430">https://staging.yoursite.com/login</text>
+    <text x="50" y="146" font-size="9" fill="#5A6B7A" letter-spacing="1">PARALLEL USERS</text>
+    <rect x="50" y="152" width="110" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="62" y="168" font-size="10" font-family="monospace" fill="#182430">3</text>
+    <text x="190" y="146" font-size="9" fill="#5A6B7A" letter-spacing="1">REPEATS PER USER</text>
+    <rect x="190" y="152" width="110" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="202" y="168" font-size="10" font-family="monospace" fill="#182430">2</text>
+    <text x="50" y="200" font-size="9" fill="#5A6B7A" letter-spacing="1">STEPS — WHAT SHOULD THE USER DO?</text>
+    <g font-family="monospace" font-size="10">
+      <text x="50" y="222" fill="#5A6B7A">1</text>
+      <rect x="64" y="208" width="115" height="22" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="72" y="223" fill="#182430" font-family="Helvetica" font-size="10">Type into ▾</text>
+      <rect x="186" y="208" width="235" height="22" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="194" y="223" fill="#182430">#email</text>
+      <rect x="428" y="208" width="235" height="22" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="436" y="223" fill="#182430">testuser@yoursite.com</text>
+      <text x="50" y="252" fill="#5A6B7A">2</text>
+      <rect x="64" y="238" width="115" height="22" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="72" y="253" fill="#182430" font-family="Helvetica" font-size="10">Type into ▾</text>
+      <rect x="186" y="238" width="235" height="22" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="194" y="253" fill="#182430">#password</text>
+      <rect x="428" y="238" width="235" height="22" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="436" y="253" fill="#182430">TestPass123</text>
+      <text x="50" y="282" fill="#5A6B7A">3</text>
+      <rect x="64" y="268" width="115" height="22" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="72" y="283" fill="#182430" font-family="Helvetica" font-size="10">Click ▾</text>
+      <rect x="186" y="268" width="235" height="22" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="194" y="283" fill="#182430">text=Sign in</text>
+      <text x="50" y="312" fill="#5A6B7A">4</text>
+      <rect x="64" y="298" width="115" height="22" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="72" y="313" fill="#182430" font-family="Helvetica" font-size="10">Expect text ▾</text>
+      <rect x="428" y="298" width="235" height="22" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="436" y="313" fill="#182430">Welcome back</text>
+    </g>
+    <rect x="50" y="332" width="84" height="22" rx="5" fill="#fff" stroke="#C9D3DB"/><text x="60" y="347" font-size="10" fill="#182430">+ Add step</text>
+    <rect x="142" y="332" width="176" height="22" rx="5" fill="#fff" stroke="#C9D3DB"/><text x="152" y="347" font-size="10" fill="#182430">Import Selenium .side file</text>
+    <text x="326" y="347" font-size="9" fill="#14A06B" font-family="monospace">Imported 4 steps from "login.side".</text>
+    <!-- browser under load -->
+    <rect x="50" y="366" width="12" height="12" rx="3" fill="#1E5EFF"/>
+    <text x="55" y="376" font-size="9" fill="#fff" font-weight="bold">✓</text>
+    <text x="70" y="376" font-size="11" fill="#182430"><tspan font-weight="bold">Browser under load:</tspan> hammer the same target with a background load test while this flow runs.</text>
+    <text x="70" y="398" font-size="9" fill="#5A6B7A" letter-spacing="1">BACKGROUND USERS</text>
+    <rect x="70" y="402" width="90" height="20" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="80" y="416" font-size="10" font-family="monospace" fill="#182430">50</text>
+    <text x="190" y="398" font-size="9" fill="#5A6B7A" letter-spacing="1">BACKGROUND DURATION (S)</text>
+    <rect x="190" y="402" width="90" height="20" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/><text x="200" y="416" font-size="10" font-family="monospace" fill="#182430">120</text>
+  </svg>
+  <figcaption>Fig. 3 — The step builder after importing a Selenium recording (green confirmation),
+  with the <b>Browser under load</b> checkbox ticked: 50 background users will hammer the site
+  while 3 real browsers run the login flow.</figcaption>
+  </figure>
+
+  <div class="callout">
+    <b>Selectors in one minute:</b> a selector points at something on the page.
+    <code>text=Sign in</code> finds whatever says "Sign in" — use this whenever possible.
+    <code>#email</code> finds the element with id <i>email</i> (right-click it → Inspect
+    to discover ids). That's 95% of what you'll ever need.
+  </div>
+
+  <h3>Importing a Selenium recording</h3>
+  <p>Recorded a flow with the free <b>Selenium IDE</b> extension? Export it as a
+  <code>.side</code> file and click the import button. Clicks, typing, navigation,
+  assertions, and waits convert automatically; the start URL and test name fill in;
+  and anything that couldn't convert is listed honestly so you can review it.</p>
+
+  <!-- ==================== 5. BROWSER REPORT ==================== -->
+  <h2 id="s5">5 · Reading a browser report (with load comparison)</h2>
+
+  <figure>
+  <svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica,Arial,sans-serif">
+    <rect width="760" height="420" fill="#F6F8FA"/>
+    <text x="40" y="38" font-size="17" font-weight="bold" fill="#182430">Login flow — staging</text>
+    <rect x="240" y="24" width="46" height="17" rx="9" fill="#E3F4EC"/><text x="249" y="36" font-size="8" fill="#14A06B" letter-spacing="1">DONE</text>
+    <text x="296" y="36" font-size="9" font-family="monospace" fill="#5A6B7A">browser · 3 user(s) × 2 loop(s)</text>
+    <g font-family="monospace">
+      <rect x="40" y="52" width="160" height="50" rx="7" fill="#fff" stroke="#C9D3DB"/>
+      <text x="52" y="69" font-size="8" fill="#5A6B7A" font-family="Helvetica" letter-spacing="1">FLOWS PASSED</text>
+      <text x="52" y="92" font-size="16" fill="#182430">5/6</text>
+      <rect x="212" y="52" width="160" height="50" rx="7" fill="#fff" stroke="#C9D3DB"/>
+      <text x="224" y="69" font-size="8" fill="#5A6B7A" font-family="Helvetica" letter-spacing="1">PASS RATE</text>
+      <text x="224" y="92" font-size="16" fill="#FF4F30">83.3 <tspan font-size="9" fill="#5A6B7A">%</tspan></text>
+      <rect x="384" y="52" width="160" height="50" rx="7" fill="#fff" stroke="#C9D3DB"/>
+      <text x="396" y="69" font-size="8" fill="#5A6B7A" font-family="Helvetica" letter-spacing="1">AVG FLOW TIME</text>
+      <text x="396" y="92" font-size="16" fill="#182430">3,410 <tspan font-size="9" fill="#5A6B7A">ms</tspan></text>
+      <rect x="556" y="52" width="160" height="50" rx="7" fill="#fff" stroke="#C9D3DB"/>
+      <text x="568" y="69" font-size="8" fill="#5A6B7A" font-family="Helvetica" letter-spacing="1">SLOWEST FLOW</text>
+      <text x="568" y="92" font-size="16" fill="#182430">5,902 <tspan font-size="9" fill="#5A6B7A">ms</tspan></text>
+    </g>
+    <!-- steps table -->
+    <rect x="40" y="116" width="676" height="112" rx="8" fill="#fff" stroke="#C9D3DB"/>
+    <rect x="40" y="116" width="676" height="22" fill="#F6F8FA"/>
+    <g font-size="8" fill="#5A6B7A" letter-spacing="1">
+      <text x="54" y="131">#</text><text x="88" y="131">ACTION</text><text x="330" y="131">PASSED</text>
+      <text x="420" y="131">AVG TIME</text><text x="510" y="131">FIRST ERROR</text>
+    </g>
+    <g font-family="monospace" font-size="10">
+      <text x="54" y="156" fill="#182430">1</text><text x="88" y="156" fill="#182430">fill #email</text>
+      <text x="330" y="156" fill="#14A06B" font-weight="bold">6/6</text><text x="420" y="156" fill="#182430">210ms</text>
+      <text x="54" y="180" fill="#182430">3</text><text x="88" y="180" fill="#182430">click text=Sign in</text>
+      <text x="330" y="180" fill="#14A06B" font-weight="bold">6/6</text><text x="420" y="180" fill="#182430">640ms</text>
+      <text x="54" y="204" fill="#182430">4</text><text x="88" y="204" fill="#182430">expect_text "Welcome back"</text>
+      <text x="330" y="204" fill="#FF4F30" font-weight="bold">5/6</text><text x="420" y="204" fill="#182430">402ms</text>
+      <text x="510" y="204" fill="#FF4F30" font-size="8">Expected to see the text…</text>
+    </g>
+    <!-- screenshot -->
+    <text x="40" y="256" font-size="13" font-weight="bold" fill="#182430">Failure screenshots</text>
+    <rect x="40" y="264" width="290" height="48" rx="6" fill="#fff" stroke="#C9D3DB"/>
+    <rect x="48" y="272" width="274" height="22" fill="#F6F8FA"/>
+    <text x="56" y="287" font-size="9" fill="#FF4F30">⚠ 500 — Internal Server Error</text>
+    <text x="48" y="306" font-size="8" font-family="monospace" fill="#FF4F30">User 2, step 4: Expected "Welcome back"…</text>
+    <!-- companion banner NEW -->
+    <rect x="40" y="330" width="676" height="74" rx="8" fill="#fff" stroke="#C9D3DB"/>
+    <rect x="40" y="330" width="3" height="74" fill="#E8960C"/>
+    <text x="60" y="350" font-size="8" fill="#5A6B7A" letter-spacing="1.5">BROWSER UNDER LOAD  ★ NEW</text>
+    <text x="60" y="368" font-size="10" fill="#182430">This flow ran while a background load test hammered the same target — compare against a</text>
+    <text x="60" y="381" font-size="10" fill="#182430">run without load to see how user experience degrades.</text>
+    <rect x="60" y="386" width="216" height="14" rx="4" fill="#fff" stroke="#C9D3DB"/>
+    <text x="66" y="396" font-size="8" fill="#182430">Open the background load report →</text>
+  </svg>
+  <figcaption>Fig. 4 — A browser report: one of six flows failed at step 4, the screenshot shows the
+  500 error the browser saw, and the amber banner links to the background load report it ran alongside.</figcaption>
+  </figure>
+
+  <p><b>Check the screenshot first</b> — it usually makes the cause obvious. Then the steps
+  table for <i>where</i> it broke and <i>where it's slow</i>. If browser-under-load was on,
+  compare the flow times against a calm run: that gap is what your customers feel at peak.</p>
+
+  <!-- ==================== 6. EXPORTS ==================== -->
+  <h2 id="s6">6 · Exporting results — HTML, PDF, PowerPoint, or email everything</h2>
+  <p>Every finished report ends with the <b>Export results</b> card. Different audiences,
+  different formats: engineers get HTML, managers get PDF, executives get slides — or
+  send all three in one email.</p>
+
+  <figure>
+  <svg viewBox="0 0 760 150" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica,Arial,sans-serif">
+    <rect width="760" height="150" fill="#F6F8FA"/>
+    <rect x="30" y="14" width="700" height="122" rx="10" fill="#fff" stroke="#C9D3DB"/>
+    <text x="52" y="40" font-size="8" fill="#5A6B7A" letter-spacing="1.5">EXPORT RESULTS</text>
+    <text x="52" y="58" font-size="10" fill="#5A6B7A">Choose the format you need — all include the history comparison and Claude's analysis.</text>
+    <rect x="52" y="72" width="118" height="28" rx="6" fill="#fff" stroke="#C9D3DB"/><text x="66" y="90" font-size="11" fill="#182430">Download HTML</text>
+    <rect x="180" y="72" width="100" height="28" rx="6" fill="#fff" stroke="#C9D3DB"/><text x="194" y="90" font-size="11" fill="#182430">Save as PDF</text>
+    <rect x="290" y="72" width="150" height="28" rx="6" fill="#fff" stroke="#C9D3DB"/><text x="304" y="90" font-size="11" fill="#182430">Save as PowerPoint</text>
+    <rect x="450" y="72" width="130" height="28" rx="6" fill="#fff" stroke="#C9D3DB"/><text x="464" y="90" font-size="11" fill="#182430">Email all formats</text>
+    <rect x="590" y="72" width="118" height="28" rx="6" fill="#F6F8FA" stroke="#C9D3DB"/><text x="598" y="90" font-size="8" font-family="monospace" fill="#5A6B7A">recipient@company.com</text>
+    <text x="52" y="122" font-size="9" font-family="monospace" fill="#14A06B">PDF ready — downloading.</text>
+  </svg>
+  <figcaption>Fig. 5 — The export card. PDF is rendered by a real browser (takes a few seconds,
+  with live status); HTML and PowerPoint download instantly; "Email all formats" attaches all three.</figcaption>
+  </figure>
+
+  <ul>
+    <li><b>HTML</b> — one self-contained file: metrics, chart, steps, history comparison,
+      full AI analysis. Opens anywhere, prints cleanly.</li>
+    <li><b>PDF</b> — the same report printed to A4 in full color by the Playwright worker.</li>
+    <li><b>PowerPoint</b> — a branded 4-slide deck with <i>native editable charts</i>
+      (line chart for load tests, per-step bars for browser tests), a past-runs table,
+      and Claude's pros/cons.</li>
+    <li><b>Email all formats</b> — HTML report as the email body, with .html, .pdf, and
+      .pptx attached.</li>
+  </ul>
+
+  <!-- ==================== 7. EMAIL ==================== -->
+  <h2 id="s7">7 · Automatic email reports with trends</h2>
+  <p>Separate from manual exports: fill the SMTP block in <code>.env</code> (a Gmail App
+  Password works — see GETTING_STARTED.md, Step 7) and <b>every finished run emails you
+  automatically</b>. Each test can have its own recipient via the "Email report to" field.</p>
+
+  <figure>
+  <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica,Arial,sans-serif">
+    <rect width="760" height="300" fill="#F6F8FA"/>
+    <!-- email client frame -->
+    <rect x="60" y="14" width="640" height="272" rx="10" fill="#fff" stroke="#C9D3DB"/>
+    <rect x="60" y="14" width="640" height="34" rx="10" fill="#EDF2F5"/>
+    <text x="80" y="36" font-size="11" font-weight="bold" fill="#182430">[Loadstar] DEGRADED — Checkout API — baseline</text>
+    <text x="80" y="66" font-size="9" fill="#5A6B7A">from: loadstar@yourco.com &nbsp;·&nbsp; to: qa-team@yourco.com</text>
+    <!-- email body -->
+    <rect x="100" y="80" width="560" height="26" fill="#182430"/>
+    <rect x="100" y="106" width="560" height="2" fill="#1E5EFF"/>
+    <text x="114" y="98" font-size="11" font-weight="bold" fill="#fff">Loadstar</text>
+    <text x="176" y="97" font-size="7" fill="#9FB4C6" letter-spacing="2">TEST REPORT</text>
+    <rect x="100" y="108" width="560" height="164" fill="#fff" stroke="#E2E8ED"/>
+    <text x="118" y="130" font-size="13" font-weight="bold" fill="#182430">Checkout API — baseline</text>
+    <rect x="118" y="140" width="76" height="18" rx="9" fill="#FBEEDC"/>
+    <text x="128" y="153" font-size="9" font-weight="bold" fill="#E8960C">DEGRADED</text>
+    <text x="204" y="153" font-size="10" font-family="monospace" fill="#5A6B7A">▼ Regressing</text>
+    <text x="118" y="176" font-size="10" fill="#182430">p95 rose 44% versus the previous run while errors appeared for the first time.</text>
+    <text x="118" y="190" font-size="8" fill="#5A6B7A">Compared against your last 5 runs of this test.</text>
+    <text x="118" y="214" font-size="10" font-weight="bold" fill="#14A06B">✔ What went well</text>
+    <text x="130" y="228" font-size="9" fill="#182430">• Throughput held steady at ~95 req/s</text>
+    <text x="380" y="214" font-size="10" font-weight="bold" fill="#FF4F30">✘ Concerns</text>
+    <text x="392" y="228" font-size="9" fill="#182430">• p95 380ms vs 264ms last run (+44%)</text>
+    <text x="392" y="241" font-size="9" fill="#182430">• Error rate 2.1% vs 0% previously</text>
+    <rect x="118" y="248" width="118" height="18" rx="4" fill="#1E5EFF"/>
+    <text x="130" y="261" font-size="9" fill="#fff" font-weight="bold">Open the full report</text>
+  </svg>
+  <figcaption>Fig. 6 — The automatic post-run email: verdict badge, trend versus the last 5 runs,
+  and Claude's pros/cons with numbers — readable in ten seconds from a phone.</figcaption>
+  </figure>
+
+  <!-- ==================== 8. SCHEDULES ==================== -->
+  <h2 id="s8">8 · Schedules &amp; alerts — testing while you sleep</h2>
+  <p>The <b>Schedules</b> tab re-runs any test every 15 minutes, hour, 6 hours, or day.
+  Combined with email reports, this is full monitoring: scheduled run → Claude compares
+  to history → email lands → and if something is actually <i>broken</i>, a webhook alert
+  hits your team chat immediately.</p>
+
+  <figure>
+  <svg viewBox="0 0 760 250" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica,Arial,sans-serif">
+    <rect width="760" height="250" fill="#F6F8FA"/>
+    <rect x="40" y="20" width="676" height="96" rx="8" fill="#fff" stroke="#C9D3DB"/>
+    <text x="60" y="44" font-size="9" fill="#5A6B7A" letter-spacing="1">TEST</text>
+    <rect x="60" y="50" width="200" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/>
+    <text x="70" y="66" font-size="10" fill="#182430">Login flow — staging ▾</text>
+    <text x="280" y="44" font-size="9" fill="#5A6B7A" letter-spacing="1">RUN EVERY</text>
+    <rect x="280" y="50" width="110" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/>
+    <text x="290" y="66" font-size="10" fill="#182430">hour ▾</text>
+    <text x="410" y="44" font-size="9" fill="#5A6B7A" letter-spacing="1">ALERT WEBHOOK URL (OPTIONAL)</text>
+    <rect x="410" y="50" width="286" height="24" rx="5" fill="#F6F8FA" stroke="#C9D3DB"/>
+    <text x="420" y="66" font-size="8" font-family="monospace" fill="#182430">https://hooks.slack.com/services/…</text>
+    <rect x="60" y="82" width="106" height="24" rx="5" fill="#1E5EFF"/>
+    <text x="74" y="98" font-size="10" fill="#fff" font-weight="bold">Add schedule</text>
+    <rect x="40" y="130" width="676" height="40" rx="8" fill="#fff" stroke="#C9D3DB"/>
+    <text x="58" y="154" font-size="11" font-weight="bold" fill="#182430">Login flow — staging</text>
+    <text x="270" y="154" font-size="9" font-family="monospace" fill="#5A6B7A">every 60 min</text>
+    <text x="380" y="154" font-size="9" font-family="monospace" fill="#5A6B7A">alerts on</text>
+    <text x="460" y="154" font-size="9" font-family="monospace" fill="#5A6B7A">last: today 14:05</text>
+    <text x="650" y="154" font-size="9" fill="#5A6B7A">Delete</text>
+    <rect x="40" y="186" width="500" height="28" rx="8" fill="#182430"/>
+    <text x="54" y="204" font-size="9" font-family="monospace" fill="#fff">⚠️ Loadstar alert — "Login flow": SLA thresholds not met: p95 ≤ 500ms (actual 812)</text>
+    <text x="40" y="238" font-size="9" font-family="monospace" fill="#5A6B7A">↑ how the alert appears in Slack / Discord / Teams — only unhealthy runs alert; healthy runs stay quiet</text>
+  </svg>
+  <figcaption>Fig. 7 — The Schedules tab and an alert as it lands in team chat. Note the alert can
+  now also fire on SLA threshold breaches, not just errors.</figcaption>
+  </figure>
+
+  <!-- ==================== 9. CI/CD ==================== -->
+  <h2 id="s9">9 · The CI/CD gate — block bad deploys automatically ★ NEW</h2>
+  <p>This is the feature professional teams pay for. Set pass/fail thresholds on a test
+  (Fig. 1), and every run gets a hard <b>SLA verdict</b> shown in the report:</p>
+
+  <figure>
+  <svg viewBox="0 0 760 320" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica,Arial,sans-serif">
+    <rect width="760" height="320" fill="#F6F8FA"/>
+    <!-- SLA card -->
+    <rect x="40" y="16" width="676" height="110" rx="8" fill="#fff" stroke="#C9D3DB"/>
+    <rect x="40" y="16" width="3" height="110" fill="#FF4F30"/>
+    <text x="60" y="38" font-size="8" fill="#5A6B7A" letter-spacing="1.5">SLA · CI/CD GATE</text>
+    <text x="60" y="62" font-size="16" font-weight="bold" fill="#FF4F30">SLA FAILED</text>
+    <text x="72" y="86" font-size="10" fill="#182430"><tspan fill="#FF4F30" font-weight="bold">✗</tspan> p95 ≤ 500ms — actual <tspan font-family="monospace">812</tspan></text>
+    <text x="72" y="104" font-size="10" fill="#182430"><tspan fill="#14A06B" font-weight="bold">✓</tspan> error rate ≤ 1% — actual <tspan font-family="monospace">0.4</tspan></text>
+    <!-- GitHub Actions log -->
+    <text x="40" y="158" font-size="12" font-weight="bold" fill="#182430">…and here's the same run failing a GitHub Actions build:</text>
+    <rect x="40" y="170" width="676" height="134" rx="8" fill="#182430"/>
+    <g font-family="monospace" font-size="10" fill="#E7EDF3">
+      <text x="58" y="192">▶ Loadstar: queuing run for test 8f3a… on https://loadstar.yourco.com</text>
+      <text x="58" y="210">═══ Loadstar result: done ═══</text>
+      <text x="58" y="226">  throughput   : 96.2 req/s      error rate   : 0.4%      p95          : 812 ms</text>
+      <text x="58" y="242">  AI verdict   : Latency regressed sharply after the payment-service change.</text>
+      <text x="58" y="264" fill="#FF6B52">✗ SLA FAILED — blocking the build:</text>
+      <text x="58" y="280" fill="#FF6B52">  ✗ p95 ≤ 500ms — actual 812</text>
+      <text x="58" y="296" fill="#FF6B52">Error: Process completed with exit code 1.</text>
+    </g>
+  </svg>
+  <figcaption>Fig. 8 — Top: the SLA card on the report. Bottom: the ci/run-test.sh script output in
+  a GitHub Actions log — exit code 1 fails the build, so the regression cannot merge.</figcaption>
+  </figure>
+
+  <h3>Setting it up (one time, ~10 minutes)</h3>
+  <ol>
+    <li>In Loadstar, create your gate test with thresholds (e.g. max p95 500ms, max error rate 1%).</li>
+    <li>Copy <code>ci/run-test.sh</code> into your application's repository.</li>
+    <li>Copy <code>ci/github-actions-example.yml</code> to
+      <code>.github/workflows/performance-gate.yml</code> in that repo.</li>
+    <li>In GitHub → Settings → Secrets → Actions, add <code>LOADSTAR_URL</code>,
+      <code>LOADSTAR_API_KEY</code>, and <code>LOADSTAR_TEST_ID</code>.</li>
+  </ol>
+  <div class="callout good"><b>Result:</b> every push runs your performance test. If someone's
+  change makes checkout 60% slower, the check turns red and the merge is blocked —
+  no human vigilance required.</div>
+
+  <h3>Two engines, same everything ★ NEW</h3>
+  <p>The Engine picker (Fig. 1) lets each load test run on <b>JMeter</b> (the 20-year
+  industry standard) or <b>k6</b> (Grafana's modern, lightweight engine). Reports, AI
+  analysis, CSV data, SLAs, exports, and CI gating are identical either way — the engine
+  is just the muscle underneath. Beginners: leave JMeter selected; try k6 when you're
+  curious, and notice it starts faster and uses less memory.</p>
+
+  <!-- ==================== 10. MULTI-REQUEST ==================== -->
+  <h2 id="s11">10 · Multi-request API sequences ★ NEW</h2>
+  <p>A single load test can now fire a whole <b>sequence</b> of API calls — log in, fetch the
+  cart, add an item, check out — each with its own method (GET / POST / PUT / DELETE), path,
+  headers, and body. On the New test screen (Non-functional), tick <b>Multiple requests</b>.
+  The Target URL becomes the base URL and each request row appends its own path. Every virtual
+  user runs the full sequence, in order, on every iteration.</p>
+  <div class="callout">Works identically on both engines (JMeter and k6) — same reports,
+  same AI analysis, same exports.</div>
+
+  <!-- ==================== 11. RESPONSE CHAINING ==================== -->
+  <h2 id="s12">11 · Response chaining — authenticated load tests ★ NEW</h2>
+  <p>Real apps sit behind a login. Response chaining lets a request <b>capture a value from its
+  response</b> so later requests can reuse it. On any request row, set an optional capture: a
+  variable name (say <code>token</code>), a source — JSON body (<code>$.token</code>), a response
+  header (<code>Set-Cookie</code>), or a regex — and then reference it downstream as
+  <code>${token}</code>, for example in an <code>Authorization: Bearer ${token}</code> header.</p>
+  <div class="callout good"><b>Keep session cookies</b> is on by default: after a login request,
+  the session cookie replays automatically on every later request in that user's flow — so many
+  authenticated tests just work, with zero extra setup. Proven end-to-end: 0 errors across
+  20,000+ chained requests.</div>
+
+  <!-- ==================== 12. CROSS-BROWSER ==================== -->
+  <h2 id="s13">12 · Cross-browser testing ★ NEW</h2>
+  <p>Functional tests can run on <b>Chromium</b> (Chrome/Edge), <b>Firefox</b>, or
+  <b>WebKit</b> (Safari's engine). Pick the engine on the New test screen; the report and the
+  Runs list show exactly which engine ran, so browser-specific breakage has nowhere to hide.</p>
+  <figure>
+    <img src="docs/screenshots/cross-browser.png" alt="Cross-browser test report showing the engine"
+      style="width:100%;height:auto;display:block;border-radius:6px">
+    <figcaption>Fig. 9 — The report names the engine that ran. The same test on Firefox, WebKit,
+    and Chromium produces genuinely different timings — that's the point.</figcaption>
+  </figure>
+
+  <!-- ==================== 13. SCRIPT UPLOAD ==================== -->
+  <h2 id="s14">13 · Bring your own script — upload JMeter or k6 ★ NEW</h2>
+  <p>Already have a script? Pick <b>Upload script</b> on the New test screen, name the test, and
+  choose a file — only <code>.jmx</code> (JMeter) or <code>.js</code> (k6) files are accepted.
+  Loadstar detects the engine, runs your script <b>as written</b> (its own virtual users and
+  duration apply), and produces the same reports, exports, and AI analysis as any other test.
+  If the script targets a much older engine version you get an advisory warning — it still runs.</p>
+  <div class="callout">Uploaded scripts work with scheduling and webhook alerts too — schedule
+  your existing JMeter suite and let Loadstar watch it.</div>
+
+  <!-- ==================== 14. AI ANALYSIS ==================== -->
+  <h2 id="s15">14 · AI analysis by Claude ★ NOW LIVE</h2>
+  <p>Add an Anthropic API key to <code>.env</code> (<code>ANTHROPIC_API_KEY=sk-ant-…</code>, from
+  <a href="https://console.anthropic.com">console.anthropic.com</a>) and every completed run is
+  analyzed by Claude: a pass/fail <b>verdict</b>, a plain-English headline, <b>pros, cons,
+  findings</b> and <b>recommendations</b>, plus a <b>trend</b> against your past runs
+  (improving / regressing / stable). The analysis renders on the report and flows into every
+  export — HTML, PDF, PowerPoint — and email.</p>
+  <figure>
+    <img src="docs/screenshots/ai-report.png" alt="Claude AI analysis card on a run report"
+      style="width:100%;height:auto;display:block;border-radius:6px">
+    <figcaption>Fig. 10 — A real analysis: PASS verdict, what went well, concerns, and
+    recommendations — generated from the run's actual metrics and history.</figcaption>
+  </figure>
+  <div class="callout">Optional — leave the key blank and everything else works normally.
+  Each analysis costs a fraction of a cent.</div>
+  <!-- ==================== 10. CHEAT SHEET ==================== -->
+<h2 id="s16">15 · One-page cheat sheet</h2>
+  <table>
+    <tr><th>I want to…</th><th>Do this</th></tr>
+    <tr><td>Check my site is fast under pressure</td><td>Load test → mode <i>Load</i> or <i>Stress</i></td></tr>
+    <tr><td>Check my site actually works</td><td>Browser test → build steps, expect text</td></tr>
+    <tr><td>Use different data per user</td><td>Upload a CSV, use <code>${column}</code> placeholders</td></tr>
+    <tr><td>Reuse a Selenium IDE recording</td><td>Browser test → Import .side file</td></tr>
+    <tr><td>See what users feel when the site is busy</td><td>Browser test → tick <i>Browser under load</i></td></tr>
+    <tr><td>Know the moment something breaks</td><td>Schedules tab → hourly + webhook</td></tr>
+    <tr><td>Get results in my inbox with trends</td><td>Set SMTP in .env + "Email report to" on the test</td></tr>
+    <tr><td>Share results with my team or boss</td><td>Report → Export card → HTML, PDF, PowerPoint, or email all</td></tr>
+    <tr><td>Block bad deploys automatically</td><td>Set thresholds on the test → ci/run-test.sh in GitHub Actions</td></tr>
+    <tr><td>Use a lighter/faster load engine</td><td>New test → Engine → k6</td></tr>
+    <tr><td>Find what to optimize first</td><td>Any report → highest p95 / slowest step / Claude's Concerns list</td></tr>
+  </table>
+
+  <p style="margin-top:40px;font-family:'Courier New',monospace;font-size:12px;color:var(--ink2)">
+  Loadstar · open-source performance &amp; browser testing · JMeter + k6 + Playwright + Claude ·
+  see README.md, GETTING_STARTED.md, and BROWSER_TESTING.md for more.</p>
+</main>
+</body>
+</html>

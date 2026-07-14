@@ -1,0 +1,35 @@
+# Copy this into your application repo as .github/workflows/performance-gate.yml
+#
+# Setup (once):
+#   1. Deploy Loadstar somewhere your CI can reach (or run it on a self-hosted runner).
+#   2. In Loadstar, create the test you want as your gate and set its
+#      pass/fail thresholds (e.g. max p95 500ms, max error rate 1%).
+#   3. In your GitHub repo: Settings → Secrets and variables → Actions, add:
+#        LOADSTAR_URL      e.g. https://loadstar.yourco.com
+#        LOADSTAR_API_KEY  the key from Loadstar's .env
+#        LOADSTAR_TEST_ID  the test's id (visible in the API or run URLs)
+#   4. Copy ci/run-test.sh into your repo (same path).
+#
+# Result: any push that makes the test breach its thresholds fails this check
+# and blocks the merge/deploy.
+
+name: Performance gate
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  loadstar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # (Optional) deploy your app to a staging environment here first,
+      # so the test hits the code from this commit.
+
+      - name: Run Loadstar test — fail on regression
+        env:
+          LOADSTAR_URL: ${{ secrets.LOADSTAR_URL }}
+          LOADSTAR_API_KEY: ${{ secrets.LOADSTAR_API_KEY }}
+        run: bash ci/run-test.sh "${{ secrets.LOADSTAR_TEST_ID }}"

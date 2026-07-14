@@ -1,0 +1,15 @@
+Loadstar
+Copyright 2026 kalkiyama
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product downloads and invokes third-party software at build/run time that
+is NOT included in this repository and is licensed separately. See THIRD_PARTY.md
+for the full list. In particular:
+
+  - Grafana k6 (https://github.com/grafana/k6) is licensed under AGPL-3.0 and is
+    downloaded as an unmodified release binary and invoked as a subprocess.
+  - Apache JMeter and Playwright are licensed under Apache-2.0.
+
+This product uses the Anthropic API for AI analysis, via an API key supplied by
+the operator; no Anthropic software is redistributed here.

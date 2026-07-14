@@ -1,0 +1,6 @@
+node_modules/
+.env
+*.jtl
+*.log
+dbdata/
+.DS_Store

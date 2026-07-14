@@ -1,0 +1,6 @@
+{
+  "name": "loadstar",
+  "private": true,
+  "type": "module",
+  "description": "Root marker so worker files outside api/ are treated as ES modules."
+}
