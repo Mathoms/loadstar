@@ -7,23 +7,15 @@
 //
 // Run from the repo root:  node verify_ssrf.mjs
 import dns from 'node:dns/promises';
-import net from 'node:net';
 
-// --- copies of the exact predicates the patch uses ---
-function isPrivateAddress(host) {
-  const m = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(host || "");
-  if (m) host = m[1];
-  if (host === "localhost" || host.endsWith(".local") || host.endsWith(".internal")) return true;
-  if (!host.includes(".") && !host.includes(":")) return true;
-  if (net.isIP(host)) {
-    return /^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host) ||
-      /^172\.(1[6-9]|2\d|3[01])\./.test(host) || /^169\.254\./.test(host) ||
-      /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(host) ||
-      host === "0.0.0.0" || host === "::1" || host === "::" ||
-      /^fe80/i.test(host) || /^f[cd]/i.test(host);
-  }
-  return false;
-}
+// Import the REAL predicate instead of re-implementing it. A test with its own
+// copy of the logic is not a test — it is a second thing to keep in sync, and
+// an inlined copy here is exactly what let the [::1] bracket-stripping fix
+// land in the app while this script kept testing a stale version of itself.
+// lib/ssrfGuard.js is dependency-free (only node:net) so this import needs no
+// npm install and no DB — this script still runs standalone, as designed.
+import { isPrivateAddress } from './api/src/lib/ssrfGuard.js';
+
 function net_isIP(s){ return /^\d+\.\d+\.\d+\.\d+$/.test(s) || s.includes(":"); }
 async function resolveAll(host){
   if (net_isIP(host)) return [host];
