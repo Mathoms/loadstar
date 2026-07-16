@@ -1,11 +1,37 @@
 # Loadstar
 
-Open-source performance testing with a clean web UI. Describe the test you want — load, stress, spike, or soak — and Loadstar generates and runs the JMeter plan, streams the results into an instrument-grade report, and asks Claude to tell you what the numbers mean.
+[![CI](https://github.com/kalkiyama/loadstar/actions/workflows/ci.yml/badge.svg)](https://github.com/kalkiyama/loadstar/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/kalkiyama/loadstar)](https://github.com/kalkiyama/loadstar/releases)
 
-Think of it as the open, self-hostable core of a BlazeMeter alternative: JMeter power without JMeter's UI.
+**JMeter power without JMeter's pain — self-hosted and free.**
 
-**New here?** Read the **[Usage Guide](USAGE.md)** — a step-by-step walkthrough of every feature, illustrated with screenshots. For deeper setup help see **[GETTING_STARTED.md](GETTING_STARTED.md)**, and for no-code browser testing see **[BROWSER_TESTING.md](BROWSER_TESTING.md)**. (An illustrated [VISUAL_GUIDE.html](VISUAL_GUIDE.html) is also included — download and open it in a browser.)
+Describe the test you want — load, stress, spike, soak, or a click-through browser flow —
+and Loadstar generates and runs it (JMeter, k6, or Playwright), streams the results into
+an instrument-grade report, and has Claude tell you what the numbers mean.
 
+![Loadstar in 90 seconds: describe a test, watch live metrics, read the AI verdict](docs/demo.gif)
+
+**Why it exists:** the load-testing world is bimodal — powerful-but-painful open source,
+and pleasant-but-expensive SaaS. Loadstar is the empty seat between them: a pleasant,
+self-hostable, open-source control plane.
+
+**Why it's different:** Loadstar tells you when its own numbers are lies. Generator
+saturated? The report says your throughput number is a floor, not a ceiling. Streaming
+endpoint? It flags that "latency" hides time-to-first-token. Distributed run? Percentiles
+are merged exactly from raw histograms — never averaged. Honest numbers first; the AI
+verdict is built on top of them, not instead of them.
+
+```bash
+git clone https://github.com/kalkiyama/loadstar.git && cd loadstar
+cp .env.example .env          # add ANTHROPIC_API_KEY for AI analysis (optional)
+docker compose up --build
+open http://localhost:8080    # test something you own in the next 5 minutes
+```
+
+**New here?** The **[Usage Guide](USAGE.md)** walks every feature with screenshots ·
+**[GETTING_STARTED.md](GETTING_STARTED.md)** assumes zero terminal experience ·
+**[BROWSER_TESTING.md](BROWSER_TESTING.md)** covers no-code browser tests.
 
 ## Screenshots
 
