@@ -1,0 +1,40 @@
+# Copy this into the root of your application repo as .gitlab-ci.yml
+#
+# Setup (once):
+#   1. In your GitLab repo: Settings → CI/CD → Variables, add:
+#        LOADSTAR_URL      e.g. http://docker:8080
+#        LOADSTAR_API_KEY  the key from Loadstar's .env (Mark as "Masked")
+#        LOADSTAR_TEST_ID  the test's id (visible in the API or run URLs)
+#   2. Ensure docker-compose.yml exists in the root of your repo.
+#   3. Copy ci/run-test.sh into your repo (same path).
+#
+# Result: Boots your application stack in Docker and runs the performance test.
+# Any push that makes the test breach its thresholds fails this check and blocks the merge/deploy.
+
+stages:
+  - test
+
+performance-gate:
+  stage: test
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    LOADSTAR_URL: "http://docker:8080"
+  before_script:
+    - apk add --no-cache bash curl
+    # create dummy .env file if one doesn't exist so docker compose succeeds
+    - test -f .env || touch .env
+    # Boot the application stack inside the CI environment
+    - docker compose up -d --wait
+  script:
+    # Run the performance gate test against the booted stack
+    - bash ci/run-test.sh "$LOADSTAR_TEST_ID"
+  after_script:
+    # Tear down the stack (runs even if the test fails)
+    - docker compose down
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
