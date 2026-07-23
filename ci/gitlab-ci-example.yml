@@ -24,7 +24,7 @@ performance-gate:
     DOCKER_TLS_CERTDIR: ""
     LOADSTAR_URL: "http://docker:8080"
   before_script:
-    - apk add --no-cache bash curl
+    - apk add --no-cache bash curl jq
     # create dummy .env file if one doesn't exist so docker compose succeeds
     - test -f .env || touch .env
     # Boot the application stack inside the CI environment
