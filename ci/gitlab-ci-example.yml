@@ -20,7 +20,9 @@ performance-gate:
   services:
     - docker:24.0.5-dind
   variables:
+    # use the Docker daemon provided by the dind service
     DOCKER_HOST: tcp://docker:2375
+    # disable TLS to simplify local container networking. This is an isolated, ephemeral CI runner sandbox environment and does not increase attack surface.
     DOCKER_TLS_CERTDIR: ""
     LOADSTAR_URL: "http://docker:8080"
   before_script:
