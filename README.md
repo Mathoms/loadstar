@@ -81,7 +81,7 @@ Run tests on a schedule (every 15 min to weekly) and get webhook alerts (Slack, 
 - **Cross-browser testing** — run functional tests on Chromium, Firefox, or WebKit (Safari's engine); the report shows which engine ran
 - **Response chaining** — capture a token or session cookie from one response (JSON path, response header, or regex) and reuse it in later requests; automatic session-cookie handling for authenticated load tests
 - **Bring your own script** — upload an existing JMeter (.jmx) or k6 (.js) script and run it as-is against the installed engine, with best-effort version-compatibility warnings
-- **CI/CD gate** — set pass/fail thresholds (max p95, max error rate, min pass rate) and use `ci/run-test.sh` in GitHub Actions to automatically fail builds on performance regressions (see `ci/github-actions-example.yml`)
+- **CI/CD gate** — set pass/fail thresholds (max p95, max error rate, min pass rate) and use `ci/run-test.sh` in GitHub Actions or GitLab CI to automatically fail builds on performance regressions (see `ci/github-actions-example.yml` and `ci/gitlab-ci-example.yml`)
 - **Generated JMeter plans** — users never touch JMX; download it anytime via `GET /api/tests/:id/jmx`
 - **CSV parameterization** — upload a data file, use `${column}` placeholders in URL/headers/body; each virtual user reads the next row
 - **Full metrics report**: throughput, error rate, avg/min/max, p50/p90/p95/p99, per-second time series chart
@@ -114,6 +114,22 @@ docker compose up --scale worker=3
 
 Run against your own local service? Keep `ALLOW_PRIVATE_TARGETS=true` (the default in `.env.example`).
 Deploying anywhere shared? Set `LOADSTAR_API_KEY`, set `ALLOW_PRIVATE_TARGETS=false`, and never enable `SKIP_TARGET_VERIFICATION`.
+
+## CI/CD Integration
+
+Loadstar provides example configurations to automate performance regression testing in your CI/CD pipelines.
+
+- **GitHub Actions:** `ci/github-actions-example.yml`
+- **GitLab CI:** `ci/gitlab-ci-example.yml` (uses Docker-in-Docker to boot the stack)
+
+### Pipeline Environment Variables
+
+| Variable | Description | Example / Default |
+|---|---|---|
+| `LOADSTAR_URL` | Base URL where the Loadstar instance is accessible from the runner environment. | `http://localhost:8080` (GitHub) / `http://docker:8080` (GitLab) |
+| `LOADSTAR_API_KEY` | Authentication key required by Loadstar's API. | GitHub: Configured via CI Secrets `${{ secrets.LOADSTAR_API_KEY }}` / GitLab: Configured in CI/CD Variables |
+| `LOADSTAR_TEST_ID` | The ID of the configured test to run (passed as argument `$1` to `ci/run-test.sh`). | `1` |
+| `LOADSTAR_TIMEOUT` | Maximum duration in seconds to poll for test completion before timing out. | `1800` |
 
 ## Do I need an API key?
 
