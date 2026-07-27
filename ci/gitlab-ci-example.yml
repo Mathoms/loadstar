@@ -36,7 +36,7 @@ performance-gate:
     - bash ci/run-test.sh "$LOADSTAR_TEST_ID"
   after_script:
     # Tear down the stack (runs even if the test fails)
-    - docker compose down
+    - docker compose down -v --remove-orphans
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
