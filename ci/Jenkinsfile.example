@@ -1,0 +1,57 @@
+// Copy this into your application repo as Jenkinsfile (or reference it in a Pipeline job)
+//
+// Setup (once):
+//   1. In Jenkins: Manage Jenkins → Credentials → System → Global credentials:
+//        - Add a "Secret Text" with ID: loadstar-api-key
+//   2. In the environment block of this Jenkinsfile, set:
+//        - LOADSTAR_URL       e.g. http://localhost:8080
+//        - LOADSTAR_TEST_ID   the test's id (visible in the API or run URLs)
+//   3. Ensure docker-compose.yml exists in the root of your repo.
+//   4. Copy ci/run-test.sh into your repo (same path).
+//
+// Assumptions:
+//   This Jenkinsfile assumes an agent node with Docker and Docker Compose installed.
+//
+// Result: Boots the Loadstar stack in Docker and runs the performance test.
+// Any build that makes the test breach its thresholds fails this check and blocks the merge/deploy.
+
+pipeline {
+    agent {
+        label 'docker'
+    }
+
+    environment {
+        // Update these settings for your target application and Loadstar test ID
+        LOADSTAR_URL     = 'http://localhost:8080'
+        LOADSTAR_TEST_ID = '1'
+        LOADSTAR_TIMEOUT = '1800'
+        
+        // Retrieved securely from Jenkins Global Credentials store
+        LOADSTAR_API_KEY = credentials('loadstar-api-key')
+    }
+
+    stages {
+        stage('Spin up Stack') {
+            steps {
+                // Ensure dummy .env file exists for env_file references in docker-compose.yml
+                sh 'test -f .env || touch .env'
+                // Boot Loadstar API, DB, workers, and demo services
+                sh 'docker compose up -d --wait'
+            }
+        }
+
+        stage('Run Loadstar test — fail on regression') {
+            steps {
+                sh 'bash ci/run-test.sh "${LOADSTAR_TEST_ID}"'
+            }
+        }
+    }
+
+    post {
+        always {
+            // Tear down stack and volumes regardless of test outcome
+            sh 'docker compose down -v --remove-orphans'
+            cleanWs()
+        }
+    }
+}
